@@ -1,0 +1,2213 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>福賀くるみ - AUDJPY,H1 - Kurumi Trader</title>
+<style>
+/* ============ 经典 Windows / MT4 浅色主题 ============ */
+:root{
+  --face:#f0f0f0;          /* 窗口灰 */
+  --face2:#e9e9e9;
+  --line:#cfcfcf;
+  --line-d:#b9b9b9;
+  --txt:#1a1a1a;
+  --txt2:#4a4a4a;
+  --blue:#3b3b9d;          /* 一键下单靛蓝 */
+  --blue2:#4a4ab4;
+  --up:#e14b4b;            /* 阳线 红 */
+  --dn:#4aa8e0;            /* 阴线 蓝 */
+  --sel:#cfe3fa;           /* 菜单/行高亮 */
+  --ui:Tahoma,"MS UI Gothic","Meiryo UI","Yu Gothic UI","Segoe UI","Microsoft YaHei",sans-serif;
+  --num:Tahoma,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;color:var(--txt);
+  background:#e9e3da;
+  font:12px var(--ui);
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select{font-family:var(--ui);font-size:11px;color:var(--txt)}
+button{cursor:pointer}
+::-webkit-scrollbar{width:15px;height:15px}
+::-webkit-scrollbar-track{background:#f0f0f0}
+::-webkit-scrollbar-thumb{background:linear-gradient(#fbfbfb,#e2e2e2);border:1px solid #b5b5b5;border-radius:0}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(#f0f8ff,#cfe3fa)}
+
+/* ============ 桌面 ============ */
+.desk{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.wall{position:absolute;inset:0;background:#ffffff}
+
+/* ============ 窗口 ============ */
+.app{
+  position:absolute;left:28px;top:22px;width:calc(100vw - 56px);height:calc(100vh - 64px);
+  z-index:10;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--face);border:1px solid #6f8fb5;border-radius:5px 5px 0 0;
+  box-shadow:0 12px 40px rgba(30,50,90,.28),0 0 0 1px rgba(255,255,255,.6) inset;
+}
+.app.maxed{left:0;top:0;width:100vw;height:calc(100vh - 42px);border-radius:0}
+.app.mini{display:none}
+
+/* 标题栏 */
+.tbar{
+  flex:0 0 27px;display:flex;align-items:center;gap:7px;padding:0 0 0 7px;
+  background:linear-gradient(180deg,#f7fbff 0%,#e4eefa 40%,#d3e3f6 100%);
+  border-bottom:1px solid #9db8d6;user-select:none;
+}
+.tbar .ico{width:16px;height:16px;border-radius:2px;background:linear-gradient(140deg,#5b7fb4,#2b4a78);
+  display:grid;place-items:center;color:#fff;font:700 9px var(--num)}
+.tbar .ttl{font:11px var(--ui);color:#16324f;text-shadow:0 1px 0 #fff;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.caps{display:flex;height:100%}
+.caps button{width:32px;height:100%;display:grid;place-items:center;border-left:1px solid #c2d6ea;color:#22405f}
+.caps button:hover{background:linear-gradient(#eaf4ff,#c7ddf6)}
+.caps .x:hover{background:#d63b2f;color:#fff;border-left-color:#b5322a}
+.caps svg{width:9px;height:9px}
+.langbtn{height:18px;padding:0 7px;margin-right:6px;border:1px solid #94b3d3;border-radius:3px;
+  background:linear-gradient(#fff,#e6f0fb);font:10px var(--ui);color:#1b3a5c;white-space:nowrap}
+.langbtn:hover{background:linear-gradient(#fff,#d3e6fb)}
+
+/* 菜单栏 */
+.mbar{flex:0 0 22px;display:flex;align-items:stretch;background:var(--face);border-bottom:1px solid #dcdcdc;position:relative;z-index:60}
+.mnu{position:relative;display:flex;align-items:stretch}
+.mnu>button{border:none;background:transparent;padding:0 10px;font:11.5px var(--ui);color:#111}
+.mnu:hover>button,.mnu.open>button{background:#cde3fa;box-shadow:inset 0 0 0 1px #9ec6ea}
+.dropdown{position:absolute;top:100%;left:0;min-width:190px;padding:2px;display:none;z-index:80;
+  background:#f6f6f6;border:1px solid #a0a0a0;box-shadow:2px 2px 6px rgba(0,0,0,.28)}
+.mnu.open .dropdown{display:block}
+.mi{display:flex;justify-content:space-between;gap:24px;padding:3px 20px 3px 22px;font:12px var(--ui);color:#111;white-space:nowrap;position:relative}
+.mi:hover{background:#cde3fa}
+.mi.on::before{content:"✓";position:absolute;left:6px}
+.mi .kb{color:#7a7a7a;font:10px var(--ui)}
+.msep{height:1px;background:#d2d2d2;margin:3px 4px}
+
+/* 工具栏 */
+.tb{flex:0 0 27px;display:flex;align-items:center;gap:1px;padding:0 3px;
+  background:linear-gradient(#fdfdfd,#f2f2f2 55%,#e8e8e8);border-bottom:1px solid #d2d2d2}
+.tbi{width:23px;height:21px;display:grid;place-items:center;border:1px solid transparent;border-radius:2px;padding:0}
+.tbi:hover{background:linear-gradient(#fff,#dcebfb);border-color:#8fb6dd}
+.tbi:active{background:linear-gradient(#cfe2f6,#eaf3fd)}
+.tbi svg{width:16px;height:16px;display:block}
+.tbi.wide{width:auto;padding:0 7px;display:flex;align-items:center;justify-content:center;gap:5px;font:11px var(--ui);white-space:nowrap}
+.tbi.on{background:linear-gradient(#e2edfa,#cfe2f6);border-color:#8fb6dd}
+.sep{width:2px;height:18px;margin:0 3px;border-left:1px solid #c4c4c4;border-right:1px solid #fff}
+.tb .grow{flex:1}
+.tfbtn{height:19px;min-width:26px;padding:0 4px;border:1px solid transparent;border-radius:2px;
+  font:11px var(--num);color:#222;background:transparent}
+.tfbtn:hover{background:linear-gradient(#fff,#e4effb);border-color:#a8c8e6}
+.tfbtn.on{border-color:#9a9a9a;background:linear-gradient(#fdfdfd,#ececec);box-shadow:inset 0 1px 2px rgba(0,0,0,.10)}
+
+/* ============ 工作区 ============ */
+.work{flex:1;min-height:0;display:flex;background:#fff}
+
+/* 気配値（Market Watch）*/
+.mw{width:196px;flex:0 0 196px;display:flex;flex-direction:column;background:#f7f7f7;border-right:1px solid #c8c8c8;min-height:0}
+.mw.hide{display:none}
+.mw-head{height:20px;display:flex;align-items:center;padding:0 6px;font:11px var(--ui);
+  background:linear-gradient(#fafafa,#ebebeb);border-bottom:1px solid #d3d3d3;color:#333}
+.mw-tb{display:grid;grid-template-columns:1fr 62px 62px;font:10px var(--ui);color:#555;
+  background:#f0f0f0;border-bottom:1px solid #dcdcdc}
+.mw-tb span{padding:2px 5px;border-right:1px solid #e2e2e2}
+.mw-tb span:last-child{border-right:none}
+.mw-list{flex:1;overflow:auto;background:#fff}
+.mw-row{display:grid;grid-template-columns:1fr 62px 62px;font:11px var(--num);cursor:default;border-bottom:1px solid #f2f2f2}
+.mw-row span{padding:2px 5px;white-space:nowrap;overflow:hidden}
+.mw-row .sym{font-family:var(--ui);color:#222}
+.mw-row:hover{background:#eaf3ff}
+.mw-row.sel{background:#3874d8;color:#fff}
+.mw-row.sel .sym{color:#fff}
+.bid{color:#c0392b;text-align:right;border-left:1px solid #f0f0f0}
+.ask{color:#1f6fb2;text-align:right;border-left:1px solid #f0f0f0}
+.mw-row.sel .bid,.mw-row.sel .ask{color:#fff}
+.mw-foot{border-top:1px solid #d3d3d3;padding:3px 5px;font:10px var(--ui);color:#555;display:flex;justify-content:space-between;background:#f0f0f0}
+
+/* 图表 */
+.chartbox{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;background:#fff}
+.chart-top{flex:1;position:relative;min-height:0}
+#chart{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.symtab{position:absolute;left:3px;top:3px;z-index:3;display:flex;align-items:center;gap:4px;
+  padding:1px 7px 2px;background:#f2f2f2;border:1px solid #b9b9b9;font:11px var(--ui);color:#222;user-select:none}
+.symtab .tri{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #444}
+.symtab:hover{background:#e8f1fb}
+.hscroll{flex:0 0 16px;background:#f0f0f0;border-top:1px solid #cfcfcf;position:relative}
+.hscroll .thumb{position:absolute;top:1px;height:13px;left:0;width:38%;
+  background:linear-gradient(#fbfbfb,#e4e4e4);border:1px solid #b3b3b3;border-radius:2px}
+.hscroll .corner{position:absolute;right:0;top:0;width:16px;height:100%;border-left:1px solid #cfcfcf;background:#eee}
+
+/* 一键下单面板（参考图核心元素）*/
+.oneclick{position:absolute;left:3px;top:24px;z-index:5;width:290px;font-family:var(--ui);
+  box-shadow:0 1px 3px rgba(0,0,0,.28);user-select:none;
+  --blue:#2f2bb8;--blue2:#4543cc;
+  background:linear-gradient(180deg,#3835c2,#26219f);transition:background .16s linear}
+.oneclick.down{--blue:#ce3a34;--blue2:#e05a4f;background:linear-gradient(180deg,#d63c3c,#a52a2e)}
+.oneclick.down .oc-vol{border-left-color:#c98c8c;border-right-color:#c98c8c}
+.oneclick.down .oc-cell+.oc-cell{border-left-color:#d88a86}
+.oc-top{display:flex;height:26px}
+.oc-tab{flex:0 0 96px;background:var(--blue);color:#fff;font:11px var(--ui);letter-spacing:.04em;
+  display:grid;place-items:center;cursor:pointer;border-top:1px solid #5a5ac0}
+.oc-tab:hover{background:var(--blue2)}
+.oc-tab:active{background:#2e2e86}
+.oc-vol{flex:1;display:flex;align-items:center;background:#f2f2f3;border-left:1px solid #8d8da8;border-right:1px solid #8d8da8}
+.oc-step{width:17px;height:100%;display:grid;place-items:center;cursor:pointer;color:#333;font-size:6px;background:transparent}
+.oc-step:hover{background:#dbeafb;color:#000}
+.oc-num{flex:1;text-align:center;font:11px var(--num);color:#111}
+.oc-bot{display:flex;height:40px;background:var(--blue)}
+.oc-cell{flex:1;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;position:relative;padding-bottom:3px}
+.oc-cell:hover{background:var(--blue2)}
+.oc-cell:active{background:#2e2e86}
+.oc-cell+.oc-cell{border-left:1px solid #6e6ec6}
+.oc-int{font:400 14px var(--num);opacity:.95;margin-top:7px}
+.oc-big{font:600 27px/1 var(--num);letter-spacing:.5px}
+.oc-sup{font:400 10px var(--num);align-self:flex-start;margin-top:8px;margin-left:1px}
+
+/* ============ 口座を選択ダイアログ ============ */
+.adlg{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:508px;background:#f0f0f0;
+  border:1px solid #6f6f6f;box-shadow:0 8px 26px rgba(0,0,0,.34);font-family:var(--ui);color:#1b1b1b}
+.ad-t{height:27px;display:flex;align-items:center;gap:4px;padding:0 4px 0 9px;
+  background:linear-gradient(#fdfefe,#eef3f8);border-bottom:1px solid #b9c3cd;font-size:11.5px;color:#243b52}
+.ad-t .sp{flex:1}
+.ad-t button{width:22px;height:19px;border:1px solid #c3ccd5;background:linear-gradient(#fff,#eef2f6);
+  color:#39536b;font:11px/1 var(--ui);display:grid;place-items:center;padding:0}
+.ad-t button:hover{background:#dfeaf7;border-color:#8fb3d6}
+.ad-body{padding:14px 12px 10px}
+.ad-lead{font-size:12px;margin:0 0 12px 4px}
+.ad-box{border:1px solid #b6b6b6;background:#fff;padding:8px}
+.ad-search{display:flex;gap:8px;margin-bottom:7px}
+.ad-search input{flex:1;height:21px;border:1px solid #b6c0ca;padding:0 5px;font:11.5px var(--ui);color:#333;outline:none}
+.ad-search input:focus{border-color:#7fa8d0}
+.ad-search button{width:96px;height:21px;border:1px solid #b6c0ca;background:linear-gradient(#fff,#eceff3);
+  font:11.5px var(--ui);color:#2b3f52}
+.ad-search button:hover{background:linear-gradient(#fff,#dfe9f5)}
+.ad-list{border:1px solid #c9d2da;background:#fff;height:98px;overflow:auto}
+.ad-row{display:flex;align-items:center;gap:8px;height:26px;padding:0 8px;font-size:12px;cursor:default}
+.ad-row:hover{background:#eaf3fc}
+.ad-row.on,.ad-row.on:hover{background:#3594e5;color:#fff}
+.ad-row .av{width:17px;height:17px;border-radius:2px;flex:0 0 17px;display:grid;place-items:center;
+  background:#1b2b63;color:#ffd34d;font:700 7px var(--num)}
+.ad-row .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ad-row .no{font-family:var(--num);color:#1a4fa0;text-decoration:underline}
+.ad-row.on .no{color:#fff}
+.ad-empty{height:26px;display:grid;place-items:center;color:#9aa3ad;font-size:11.5px}
+.ad-foot{display:flex;justify-content:flex-end;gap:10px;padding:9px 14px 12px;border-top:1px solid #d5dbe1;background:#e9edf2}
+.ad-foot button{min-width:92px;height:23px;border:1px solid #9fb0c0;background:linear-gradient(#fff,#e6ebf1);
+  font:11.5px var(--ui);color:#22374b;box-shadow:inset 0 1px 0 #fff}
+.ad-foot button:hover{background:linear-gradient(#fff,#d7e4f2)}
+.ad-foot button.primary{border-color:#7fa5c9;background:linear-gradient(#fff,#dceaf8)}
+.ad-foot button.primary:hover{background:linear-gradient(#fff,#c6dcf2)}
+
+/* ============ 终端（底部）============ */
+.term{flex:0 0 158px;display:flex;flex-direction:column;background:#f5f5f5;border-top:1px solid #a8a8a8;min-height:0}
+.term.small{flex-basis:26px}
+.term-tabs{flex:0 0 23px;display:flex;align-items:flex-end;gap:1px;padding:0 4px;background:#ededed;border-bottom:1px solid #bdbdbd}
+.ttab{height:20px;padding:0 10px;display:flex;align-items:center;gap:5px;font:11px var(--ui);color:#333;
+  background:#e3e3e3;border:1px solid #c3c3c3;border-bottom:none;border-radius:3px 3px 0 0}
+.ttab:hover{background:#eef4fc}
+.ttab.on{background:#fff;color:#000;height:22px;margin-bottom:-1px;border-color:#b3b3b3}
+.ttab .c{font:9px var(--num);color:#666;background:#dcdcdc;border-radius:6px;padding:0 4px}
+.term-body{flex:1;min-height:0;overflow:auto;background:#fff}
+.term.small .term-body{display:none}
+table.mt{width:100%;border-collapse:collapse;font:11px var(--num)}
+table.mt th{position:sticky;top:0;z-index:2;background:linear-gradient(#fcfcfc,#ececec);color:#333;
+  font:11px var(--ui);font-weight:400;text-align:right;padding:2px 8px;border-bottom:1px solid #cfcfcf;
+  border-right:1px solid #e6e6e6;white-space:nowrap}
+table.mt th:first-child,table.mt td:first-child{text-align:left}
+table.mt td{padding:2px 8px;text-align:right;border-bottom:1px solid #f1f1f1;border-right:1px solid #f6f6f6;white-space:nowrap;color:#111}
+table.mt td.txt{font-family:var(--ui)}
+table.mt tbody tr:hover{background:#eaf3ff}
+table.mt tbody tr.sel{background:#3874d8;color:#fff}
+table.mt tbody tr.sel td{color:#fff}
+.pos{color:#1a7f37}.neg{color:#c0392b}
+.empty{padding:18px;text-align:center;color:#888;font:11px var(--ui)}
+.term-foot{flex:0 0 24px;display:flex;align-items:center;gap:26px;padding:0 10px;font:12.5px var(--ui);
+  color:#3d3d3d;border-top:1px solid #6e6e6e;
+  background:linear-gradient(180deg,#9a9a9a,#8b8b8b 55%,#858585);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -1px 0 rgba(0,0,0,.12)}
+.term-foot span{color:#333;text-shadow:0 1px 0 rgba(255,255,255,.18)}
+.term-foot b{font-family:var(--num);font-weight:400;color:#232323;font-size:13px}
+.term-foot b.warn{color:#8c1d12}
+.term-foot b.ok{color:#123c1c}
+.jrnl{font:11px var(--num);padding:3px 8px;color:#222;white-space:pre}
+.jrnl div{padding:1px 0;border-bottom:1px solid #f6f6f6}
+.jrnl .t{color:#666;margin-right:6px}
+
+/* 状态栏 */
+.sbar{flex:0 0 21px;display:flex;align-items:center;gap:0;background:var(--face);border-top:1px solid #dcdcdc;font:11px var(--ui);color:#333}
+.sbar .cell{padding:0 8px;height:100%;display:flex;align-items:center;gap:5px;border-right:1px solid #dcdcdc;white-space:nowrap}
+.sbar .cell.grow{flex:1;border-right:none}
+.sbar .bars{display:inline-flex;align-items:flex-end;gap:1px;height:9px}
+.sbar .bars i{width:2px;background:#1a7f37;display:block}
+.sbar b{font-family:var(--num);font-weight:400;color:#111}
+
+/* ============ 对话框（MT4 风格）============ */
+.mask{position:absolute;inset:0;z-index:200;background:rgba(120,140,170,.25);display:none}
+.mask.on{display:block}
+.dlg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:392px;
+  background:#ececec;border:1px solid #9aa8b8;border-radius:6px;
+  box-shadow:0 14px 44px rgba(20,40,70,.34),0 0 0 1px rgba(255,255,255,.7) inset;font:12px var(--ui)}
+.dlg-head{height:25px;border-radius:5px 5px 0 0;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 8px;
+  background:linear-gradient(#f7fbff,#dbe9f8);border-bottom:1px solid #a9c3e0;font:11px var(--ui);color:#16324f}
+.dlg-head button{width:26px;height:18px;border:1px solid transparent;color:#22405f}
+.dlg-head button:hover{background:#d63b2f;color:#fff}
+.dlg-body{padding:12px 14px 8px}
+.ogrid{display:grid;grid-template-columns:74px 1fr;align-items:center;gap:7px 8px;margin-bottom:7px}
+.ogrid>span{text-align:right;color:#2b2b2b;font-size:11.5px}
+.ogrid .note{grid-column:2;font-size:10.5px;color:#555;margin-top:-2px}
+.grayinp{height:22px;background:#c6c6c6;border:1px solid #8f8f8f;padding:1px 6px;font:11.5px var(--num);color:#1c1c1c;
+  display:flex;align-items:center;justify-content:space-between;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.grayinp .car{color:#555;font-size:9px}
+.symsel{width:100%;height:22px;background:#c6c6c6;border:1px solid #8f8f8f;font:11.5px var(--ui);color:#1c1c1c;
+  padding:0 4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5);appearance:auto}
+.ogrid>div{text-align:left}
+.slrow{display:flex;align-items:center;gap:5px;min-width:0}
+.slrow .lbl{color:#2b2b2b;font-size:11px;white-space:nowrap;flex:0 0 auto}
+.slrow .sinp{flex:0 1 76px;min-width:48px;height:22px;background:#fff;border:1px solid #8f8f8f;padding:1px 5px;font:11.5px var(--num);text-align:right}
+.group{position:relative;border:1px solid #b4b4b4;border-radius:3px;padding:12px 12px 8px;margin-top:8px;background:#efefef}
+.group .gtitle{position:absolute;left:9px;top:-8px;padding:0 4px;background:#ececec;font-size:11.5px;color:#2b2b2b}
+.gprice{text-align:center;font:400 25px var(--num);color:#1e1e1e;letter-spacing:.5px;margin:6px 0 9px}
+.gprice small{font-size:20px;color:#555}
+.gbtns{display:flex;gap:10px;margin-bottom:8px}
+.gbtn{flex:1;height:27px;font:12px var(--ui);color:#1a1a1a;border:1px solid #7a7a7a;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 1px 0 rgba(0,0,0,.06)}
+.gbtn.sell{background:linear-gradient(180deg,#ee837f,#e47775)}
+.gbtn.buy{background:linear-gradient(180deg,#7faddf,#6fa8dd)}
+.gbtn:hover{filter:brightness(1.06)}
+.gbtn:active{filter:brightness(.94)}
+.gbar{height:14px;background:#c9c9c9;border:1px solid #b3b3b3;margin-bottom:7px}
+.gnote{text-align:center;font-size:10.5px;color:#333;line-height:1.5}
+.drow{display:grid;grid-template-columns:88px 1fr;align-items:center;gap:8px;margin-bottom:6px}
+.drow>span{color:#222;font-size:11.5px}
+.dlg .inp{height:21px;border:1px solid #7f9db9;background:#fff;padding:1px 5px;font:12px var(--num);box-shadow:inset 1px 1px 1px #e2e2e2;width:100%}
+.dlg select.inp{font-family:var(--ui);font-size:11.5px}
+.dlg .inp:disabled{background:#f0f0f0;color:#777}
+.dlg-foot{display:flex;justify-content:flex-end;gap:7px;padding:4px 12px 12px}
+.dlg-foot:empty{display:none}
+.btn{height:23px;padding:0 16px;min-width:78px;border:1px solid #8e9db3;border-radius:3px;
+  background:linear-gradient(#fdfefe,#eef1f5 55%,#e2e7ee);font:11.5px var(--ui);color:#1a1a1a;
+  box-shadow:inset 0 1px 0 #fff}
+.btn:hover{background:linear-gradient(#fff,#dcebfb);border-color:#7aa8d8}
+.btn.pri{background:linear-gradient(#fdfefe,#dbe9f8 55%,#cddff4);border-color:#7aa8d8;font-weight:600}
+.btn.def{outline:1px solid #9ec6ea;outline-offset:-3px}
+.dinfo{background:#fff;border:1px solid #c9c9c9;padding:6px 8px;font:11px var(--num);margin-top:4px}
+.dinfo div{display:flex;justify-content:space-between;padding:1px 0}
+.dinfo span{color:#555;font-family:var(--ui)}
+
+/* ============ 水印 ============ */
+.wm{position:fixed;right:14px;bottom:52px;z-index:4000;pointer-events:none;user-select:none;
+  color:#ffffff;opacity:.55;font:12px var(--ui);letter-spacing:.3px;text-shadow:0 1px 2px rgba(30,50,80,.22)}
+
+/* ============ 任务栏 ============ */
+.taskbar{position:absolute;left:0;right:0;bottom:0;height:42px;z-index:5000;display:flex;align-items:center;gap:0;
+  padding:0 6px 0 2px;
+  background:linear-gradient(180deg,rgba(248,251,254,.97) 0%,rgba(238,245,251,.96) 45%,rgba(226,236,246,.97) 100%);
+  border-top:1px solid rgba(150,175,200,.55);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 -4px 14px rgba(120,150,190,.10);
+  backdrop-filter:blur(10px)}
+/* 开始按钮：Win7 四格旗 */
+.start{width:40px;height:42px;display:grid;place-items:center;border:none;background:transparent;padding:0}
+.start .orb{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 36% 26%,#eaf7ff 0%,#8fd0f0 24%,#3f9ed8 58%,#12649f 100%);
+  box-shadow:0 1px 2px rgba(12,60,105,.45),inset 0 -2px 5px rgba(0,0,0,.18),inset 0 1px 2px rgba(255,255,255,.9)}
+.start:hover .orb{filter:brightness(1.07)}
+.start .orb svg{width:15px;height:15px}
+/* 検索ボックス */
+.tsearch{position:relative;width:186px;height:22px;margin:0 10px 0 4px;flex:0 0 186px}
+.tsearch input{width:100%;height:22px;border:1px solid #a9b6c3;border-radius:2px;padding:0 22px 0 7px;
+  font:11px var(--ui);color:#41556a;background:linear-gradient(180deg,#fff,#f7fafd);outline:none;
+  box-shadow:inset 0 1px 1px rgba(0,0,0,.04)}
+.tsearch input:focus{border-color:#7fa8d0;background:#fff}
+.tsearch input::placeholder{color:#8d9aa8}
+.tsearch .mag{position:absolute;right:5px;top:4px;width:13px;height:13px;color:#7f96ab;pointer-events:none}
+/* 固定アイコン */
+.pinbar{display:flex;align-items:center;gap:2px;height:100%}
+.pin{width:32px;height:36px;display:grid;place-items:center;border-radius:3px;border:1px solid transparent;background:transparent;padding:0}
+.pin:hover{background:rgba(150,185,215,.22);border-color:rgba(140,180,215,.7)}
+.pin svg{width:24px;height:24px;display:block}
+.lnsep{width:1px;height:24px;background:rgba(150,175,200,.5);margin:0 5px}
+/* 実行中のウィンドウ */
+.run{width:36px;height:36px;display:grid;place-items:center;border-radius:3px;margin-left:4px;padding:0;
+  border:1px solid rgba(120,160,200,.75);
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(214,231,248,.95));
+  box-shadow:inset 0 1px 0 #fff,0 1px 1px rgba(30,70,110,.10)}
+.run:hover{background:linear-gradient(180deg,#fff,#c9def5)}
+.run.off{border-color:transparent;background:transparent;box-shadow:none}
+.run.off:hover{background:rgba(150,185,215,.22);border-color:rgba(140,180,215,.7)}
+.run .ico{width:20px;height:20px;border-radius:2px;display:grid;place-items:center;
+  background:linear-gradient(140deg,#5b7fb4,#2b4a78);color:#fff;font:700 9px var(--num)}
+/* 通知領域 */
+.tray{margin-left:auto;display:flex;align-items:center;gap:9px;height:32px;padding:0 8px 0 12px;
+  border-left:1px solid rgba(150,175,205,.30)}
+.tk{height:26px;min-width:24px;display:grid;place-items:center;border-radius:3px;border:1px solid transparent;
+  background:transparent;color:#5f7c97;padding:0}
+.tk:hover{background:rgba(140,175,210,.22);border-color:rgba(150,185,215,.6)}
+.tk svg{width:17px;height:17px;display:block}
+.tk .glyph{font:400 15px var(--ui);color:#5f7c97;line-height:1}
+.tk-up svg{width:11px;height:11px}
+.clock{font:400 12px var(--num);color:#4f6a84;white-space:nowrap;padding-left:4px;letter-spacing:.2px}
+/* ============ 开始菜单（Win10 布局 · 直角 · 浅色） ============ */
+.smenu{position:fixed;left:4px;bottom:44px;width:512px;height:462px;z-index:9000;display:none;
+  background:#fff;border:1px solid #8794a2;box-shadow:0 10px 28px rgba(20,40,70,.26);
+  font-family:var(--ui);color:#1d1d1d;flex-direction:column}
+.smenu.on{display:flex}
+.sm-top{height:42px;display:flex;align-items:center;gap:9px;padding:0 12px;border-bottom:1px solid #dfe4ea;background:#f6f8fa}
+.sm-ava{width:26px;height:26px;border:1px solid #9fb0c0;display:grid;place-items:center;
+  font:700 12px var(--ui);color:#33556f;background:#eef3f8;flex:0 0 26px}
+.sm-user{font-size:12px;color:#24384a}
+.sm-body{flex:1;display:flex;min-height:0}
+.sm-rail{flex:0 0 40px;background:#f4f6f8;border-right:1px solid #dfe4ea;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:2px}
+.sm-rail .sp{flex:1}
+.srail{width:30px;height:30px;display:grid;place-items:center;border:1px solid transparent;background:transparent;color:#4a627a;padding:0}
+.srail:hover{background:#e6eef7;border-color:#b9cbdd}
+.srail svg{width:15px;height:15px}
+.sm-list{flex:1;overflow:auto;padding:4px 0 8px;min-width:0}
+.sm-head{font:11px var(--ui);color:#5b7fa6;margin:9px 12px 3px}
+.sm-app{display:flex;align-items:center;gap:9px;width:100%;height:27px;padding:0 12px;border:none;background:transparent;
+  font:12px var(--ui);color:#1d1d1d;text-align:left}
+.sm-app:hover{background:#e8f0f9}
+.sm-app .gi{width:17px;height:17px;flex:0 0 17px;display:grid;place-items:center;color:#fff;font:700 8px var(--num)}
+.sm-app .sub{color:#8b98a5;font-size:10px;margin-left:auto}
+.sm-tiles{flex:0 0 172px;padding:8px;display:grid;grid-template-columns:74px 74px;grid-auto-rows:74px;gap:8px;
+  align-content:start;border-left:1px solid #dfe4ea;background:#fbfcfd}
+.tile{border:1px solid rgba(0,0,0,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:#fff;font:11px var(--ui);padding:2px;text-align:center;line-height:1.15}
+.tile:hover{filter:brightness(1.08)}
+.tile:active{filter:brightness(.94)}
+.sm-foot{height:34px;display:flex;align-items:center;gap:8px;padding:0 12px;border-top:1px solid #dfe4ea;background:#f6f8fa}
+.sm-foot .sp{flex:1}
+.pwbtn{width:28px;height:24px;display:grid;place-items:center;border:1px solid transparent;background:transparent;color:#43596d}
+.pwbtn:hover{background:#e6eef7;border-color:#b9cbdd}
+.pwbtn svg{width:14px;height:14px}
+#startBtn.on .orb{filter:brightness(1.12) saturate(1.1)}
+
+/* ============ 仮想ブラウザ（経済ニュース） ============ */
+.brw{position:fixed;left:calc(100vw - 680px);top:78px;z-index:11;width:604px;height:438px;display:none;flex-direction:column;
+  background:#fff;border:1px solid #7c8b9a;box-shadow:0 12px 34px rgba(20,40,70,.28);font-family:var(--ui);color:#1d1d1d}
+.brw.on{display:flex}
+.brw.maxed{left:0;top:0;width:100vw;height:calc(100vh - 42px)}
+.brw-t{height:25px;display:flex;align-items:center;gap:7px;padding:0 4px 0 8px;
+  background:linear-gradient(#fdfefe,#eef3f8);border-bottom:1px solid #b9c3cd;font-size:11.5px;color:#20364b;cursor:move}
+.brw-t .tt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brw-t button{width:21px;height:17px;border:1px solid #c3ccd5;background:linear-gradient(#fff,#eef2f6);color:#39536b;
+  display:grid;place-items:center;font:10px/1 var(--ui);padding:0}
+.brw-t button:hover{background:#dfeaf7}
+.brw-bar{height:27px;display:flex;align-items:center;gap:4px;padding:0 6px;border-bottom:1px solid #d7dde3;background:#f4f7fa}
+.brw-bar .nb{width:21px;height:18px;border:1px solid #b9c3cd;background:linear-gradient(#fff,#eef2f6);color:#33536e;
+  display:grid;place-items:center;padding:0;font:11px var(--ui)}
+.brw-bar .nb:hover{background:#dfeaf7}
+.brw-bar .url{flex:1;height:18px;border:1px solid #b9c3cd;background:#fff;display:flex;align-items:center;padding:0 6px;
+  font:11px var(--ui);color:#33475b;overflow:hidden;white-space:nowrap}
+.brw-tabs{height:23px;display:flex;align-items:flex-end;gap:2px;padding:0 6px;background:#eceff3;border-bottom:1px solid #c9d2da}
+.btab{height:19px;padding:0 12px;display:flex;align-items:center;font:11px var(--ui);color:#3c536a;background:#e2e7ec;
+  border:1px solid #c2ccd6;border-bottom:none}
+.btab.on{background:#fff;color:#12283b;height:21px;margin-bottom:-1px}
+.brw-tick{height:21px;display:flex;align-items:center;background:#fbfcfd;border-bottom:1px solid #dde4ea;overflow:hidden;
+  font:11px var(--num);color:#33475b}
+.brw-tick .it{padding:0 9px;white-space:nowrap;border-right:1px solid #e3e8ee}
+.brw-body{flex:1;display:flex;min-height:0}
+.brw-main{flex:1;overflow:auto;padding:8px 12px}
+.brw-side{flex:0 0 128px;border-left:1px solid #dfe4ea;background:#fafbfc;padding:8px;overflow:auto}
+.bh{font:11px var(--ui);color:#5b7fa6;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid #e2e7ec}
+.ni{padding:6px 0;border-bottom:1px dotted #dfe4ea}
+.ni-h{display:flex;align-items:baseline;gap:6px;font:12px var(--ui);color:#16304a}
+.ni-time{color:#7b8794;font:11px var(--num);flex:0 0 auto}
+.ni-tag{font:10px var(--ui);padding:0 4px;border:1px solid #c0392b;color:#c0392b;flex:0 0 auto}
+.ni-tag.calm{border-color:#4a7ab5;color:#4a7ab5}
+.ni-b{font:11px var(--ui);color:#5c6b79;margin:3px 0 0;line-height:1.5}
+.ni-s{font:10px var(--ui);color:#95a1ad;margin-top:3px}
+.ni.fresh{background:#fffbe6}
+.rt{display:flex;justify-content:space-between;padding:3px 0;font:11px var(--num);border-bottom:1px dotted #e6eaef}
+.rt .up{color:#c0392b}
+.rt .dn{color:#2f6fa8}
+.brw-st{height:19px;display:flex;align-items:center;gap:8px;padding:0 8px;background:#f0f3f6;border-top:1px solid #d7dde3;
+  font:10.5px var(--ui);color:#61707e}
+
+/* ============ ニュース通知 ============ */
+.npop{position:fixed;right:14px;bottom:50px;z-index:9500;width:302px;display:none;
+  background:#fff;border:1px solid #7c8b9a;box-shadow:0 6px 20px rgba(20,40,70,.26);font-family:var(--ui)}
+.npop.on{display:block}
+.npop-h{height:23px;display:flex;align-items:center;gap:6px;padding:0 3px 0 8px;background:#f3f6f9;
+  border-bottom:1px solid #d7dde3;font:11px var(--ui);color:#20364b}
+.npop-h .tt{flex:1}
+.npop-h button{width:19px;height:16px;border:none;background:transparent;color:#5b6b7a;font:11px var(--ui)}
+.npop-h button:hover{background:#e3ebf4}
+.npop-b{display:flex;gap:9px;padding:9px 10px 10px}
+.npop-i{width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;background:#c0392b;color:#fff;font:700 10px var(--num)}
+.npop-t{font:12px var(--ui);color:#16304a;line-height:1.4}
+.npop-s{font:11px var(--ui);color:#6a7987;margin-top:3px}
+
+@media (max-width:1100px){ .mw{flex-basis:168px;width:168px} .oneclick{width:224px} }
+</style>
+</head>
+<body>
+<div class="desk">
+  <div class="wall"></div>
+
+  <div class="app" id="app">
+    <!-- 标题栏 -->
+    <div class="tbar" id="tbar">
+      <div class="ico">MT</div>
+      <div class="ttl" id="winTitle">福賀くるみ - AUDJPY,H1 - Kurumi Trader</div>
+      <button class="langbtn" id="langBtn" title="言語切替 / 切换语言">日本語 ⇄ 中文</button>
+      <div class="caps">
+        <button id="btnMin" title="最小化"><svg viewBox="0 0 9 9"><rect x="1" y="4" width="7" height="1" fill="currentColor"/></svg></button>
+        <button id="btnMax" title="最大化"><svg viewBox="0 0 9 9" fill="none" stroke="currentColor"><rect x="1.2" y="1.2" width="6.6" height="6.6"/></svg></button>
+        <button id="btnClose" class="x" title="閉じる"><svg viewBox="0 0 9 9" stroke="currentColor" stroke-width="1.1"><path d="M1.2 1.2l6.6 6.6M7.8 1.2L1.2 7.8"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 菜单栏 -->
+    <div class="mbar" id="mbar"></div>
+
+    <!-- 工具栏 1 -->
+    <div class="tb" id="tb1">
+      <button class="tbi" title="ワークスペース" data-i18n-title="tip.workspace">
+        <svg viewBox="0 0 16 16"><rect x="1" y="3" width="9" height="7" fill="#cfe0f5" stroke="#5b7fb4"/><rect x="3" y="5" width="9" height="7" fill="#8fb6e0" stroke="#3c6699"/></svg>
+      </button>
+      <button class="tbi" id="btnCross" title="十字カーソル">
+        <svg viewBox="0 0 16 16" fill="none" stroke="#6a5b8a"><circle cx="8" cy="8" r="5"/><path d="M8 1v3M8 12v3M1 8h3M12 8h3"/></svg>
+      </button>
+      <span class="sep"></span>
+      <button class="tbi" id="btnBuyArrow" title="新規買い注文" data-i18n-title="tip.buy">
+        <svg viewBox="0 0 16 16"><path d="M8 2l4 5H9.6v6H6.4V7H4z" fill="#57b757" stroke="#2f7d2f"/></svg>
+      </button>
+      <button class="tbi" id="btnSellArrow" title="新規売り注文" data-i18n-title="tip.sell">
+        <svg viewBox="0 0 16 16"><path d="M8 14L4 9h2.4V3h3.2v6H12z" fill="#e06a6a" stroke="#a83a3a"/></svg>
+      </button>
+      <span class="sep"></span>
+      <button class="tbi" title="テンプレート">
+        <svg viewBox="0 0 16 16"><path d="M1.5 3.5h4l1.2 1.6h6.8v8H1.5z" fill="#f5d76e" stroke="#b99a2a"/></svg>
+      </button>
+      <button class="tbi" title="ズーム">
+        <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3" fill="#dceafa" stroke="#4a6f96"/><path d="M10.2 10.2l4 4" stroke="#4a6f96" stroke-width="1.6"/></svg>
+      </button>
+      <button class="tbi wide" id="btnNewOrder" title="新規注文">
+        <svg viewBox="0 0 16 16"><rect x="2.5" y="1.5" width="9" height="11" fill="#fff" stroke="#7a7a7a"/><path d="M4.5 4.5h5M4.5 6.5h5M4.5 8.5h3" stroke="#9a9a9a"/><circle cx="12" cy="10.5" r="3.4" fill="#e8443a"/><path d="M12 8.9v3.2M10.4 10.5h3.2" stroke="#fff" stroke-width="1.2"/></svg>
+        <span data-i18n="tb.newOrder"></span>
+      </button>
+      <button class="tbi" id="btnAuto" title="自動売買">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.6" fill="#ffe08a" stroke="#c49a1e"/><circle cx="6" cy="6.6" r=".9" fill="#7a5c00"/><circle cx="10" cy="6.6" r=".9" fill="#7a5c00"/><path d="M5.6 9.4c1.6 1.4 3.2 1.4 4.8 0" stroke="#7a5c00" fill="none" stroke-linecap="round"/></svg>
+      </button>
+      <span class="sep"></span>
+      <button class="tbi" title="気配値" id="btnMW">
+        <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" fill="#fff" stroke="#7a7a7a"/><path d="M1.5 5.5h13" stroke="#7a7a7a"/><path d="M4 8.5h3M4 10.5h3M9 8.5h3M9 10.5h3" stroke="#9a9a9a"/></svg>
+      </button>
+      <button class="tbi" title="データウィンドウ">
+        <svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="#fff" stroke="#7a7a7a"/><path d="M4 5h8M4 8h8M4 11h5" stroke="#9a9a9a"/></svg>
+      </button>
+      <span class="sep"></span>
+      <button class="tbi" title="フォルダ">
+        <svg viewBox="0 0 16 16"><path d="M1.5 3.5h4l1.2 1.6h6.8v8H1.5z" fill="#f5d76e" stroke="#b99a2a"/></svg>
+      </button>
+      <button class="tbi" title="データフィード">
+        <svg viewBox="0 0 16 16"><path d="M3.5 11a3 3 0 010-6 4 4 0 017.6-1A2.6 2.6 0 0112.5 11z" fill="#bcd7f5" stroke="#7fa8d6"/></svg>
+      </button>
+      <div class="grow"></div>
+      <span class="sep"></span>
+      <button class="tbi wide" id="btnLang2" title="言語切替"><span id="langLabel">中文</span></button>
+    </div>
+
+    <!-- 工具栏 2 -->
+    <div class="tb" id="tb2">
+      <button class="tbi" title="縮小"><svg viewBox="0 0 16 16" stroke="#5a5a5a" stroke-width="1.6"><path d="M3 8h7"/><path d="M8.5 5.5L11 8l-2.5 2.5"/></svg></button>
+      <button class="tbi" title="垂直線"><svg viewBox="0 0 16 16" stroke="#5a5a5a" stroke-width="1.6"><path d="M8 2v12"/></svg></button>
+      <button class="tbi" title="水平線"><svg viewBox="0 0 16 16" stroke="#5a5a5a" stroke-width="1.6"><path d="M2 8h12"/></svg></button>
+      <button class="tbi" title="トレンドライン"><svg viewBox="0 0 16 16" stroke="#5a5a5a" stroke-width="1.6"><path d="M3 13L13 3"/></svg></button>
+      <button class="tbi" title="テキスト"><svg viewBox="0 0 16 16"><text x="4" y="12" font-family="Georgia,serif" font-size="11" fill="#3a3a3a">A</text></svg></button>
+      <button class="tbi" title="ラベル"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" fill="#fff" stroke="#9a9a9a"/><text x="4" y="12" font-family="Georgia,serif" font-size="11" fill="#3a3a3a">T</text><circle cx="12.5" cy="4.5" r="1.4" fill="#3a3a3a"/></svg></button>
+      <span class="sep"></span>
+      <button class="tbi" title="インジケーター"><svg viewBox="0 0 16 16"><path d="M3 13V4M6 13V7M9 13V9M12 13V6" stroke="#4a4a4a" stroke-width="1.4"/><text x="11" y="14" font-size="6" fill="#4a4a4a">E</text></svg></button>
+      <button class="tbi" title="お気に入り"><svg viewBox="0 0 16 16"><path d="M3 5h10M3 8h10M3 11h6" stroke="#4a4a4a" stroke-width="1.4"/><text x="11" y="14" font-size="6" fill="#4a4a4a">F</text></svg></button>
+      <button class="tbi" title="拡大"><svg viewBox="0 0 16 16"><path d="M3 6l5-3 5 3z" fill="#4a4a4a"/><path d="M3 11l5 3 5-3z" fill="#4a4a4a"/></svg></button>
+      <span class="sep"></span>
+      <div id="tfBox" style="display:flex;gap:0;align-items:center"></div>
+      <div class="grow"></div>
+      <span id="tfHint" style="font:10px var(--ui);color:#666;padding-right:4px"></span>
+    </div>
+
+    <!-- 工作区 -->
+    <div class="work">
+      <aside class="mw hide" id="mw">
+        <div class="mw-head"><span data-i18n="mw.title"></span></div>
+        <div class="mw-tb"><span data-i18n="mw.sym"></span><span style="text-align:right" data-i18n="mw.bid"></span><span style="text-align:right" data-i18n="mw.ask"></span></div>
+        <div class="mw-list" id="mwList"></div>
+        <div class="mw-foot"><span id="mwSpread">—</span><span id="mwTime">—</span></div>
+      </aside>
+
+      <div class="chartbox">
+        <div class="chart-top" id="chartTop">
+          <canvas id="chart"></canvas>
+          <div class="symtab" id="symTab"><span class="tri"></span><span id="symText">AUDJPY</span></div>
+          <div class="oneclick" id="oneclick">
+            <div class="oc-top">
+              <button class="oc-tab" id="ocSell" data-i18n="oc.sell"></button>
+              <div class="oc-vol">
+                <button class="oc-step" id="ocPrev">▲</button>
+                <div class="oc-num" id="ocVol">15.00</div>
+                <button class="oc-step" id="ocNext">▼</button>
+              </div>
+              <button class="oc-tab" id="ocBuy" data-i18n="oc.buy"></button>
+            </div>
+            <div class="oc-bot">
+              <div class="oc-cell" id="ocBid" title="売り: クリックで売り成行"></div>
+              <div class="oc-cell" id="ocAsk" title="買い: クリックで買い成行"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hscroll"><div class="thumb" id="hthumb"></div><div class="corner"></div></div>
+      </div>
+    </div>
+
+    <!-- 终端 -->
+    <div class="term" id="term">
+      <div class="term-tabs" id="termTabs">
+        <button class="ttab on" data-pane="trade"><span data-i18n="term.trade"></span><span class="c" id="cTrade">0</span></button>
+        <button class="ttab" data-pane="acct"><span data-i18n="term.acct"></span></button>
+        <button class="ttab" data-pane="hist"><span data-i18n="term.hist"></span><span class="c" id="cHist">0</span></button>
+        <button class="ttab" data-pane="news"><span data-i18n="term.news"></span><span class="c" id="cNews">0</span></button>
+        <button class="ttab" data-pane="jrnl"><span data-i18n="term.jrnl"></span><span class="c" id="cJrnl">0</span></button>
+        <div style="flex:1"></div>
+        <button class="ttab" id="termToggle" style="padding:0 6px" title="縮小/展開">▾</button>
+      </div>
+
+      <div class="term-body">
+        <div class="pane" id="pane-trade">
+          <table class="mt">
+            <thead><tr>
+              <th data-i18n="t.ticket"></th><th data-i18n="t.time"></th><th data-i18n="t.sym"></th>
+              <th data-i18n="t.type"></th><th data-i18n="t.vol"></th><th data-i18n="t.price"></th>
+              <th data-i18n="t.cur"></th><th data-i18n="t.profit"></th><th data-i18n="t.swap"></th><th></th>
+            </tr></thead>
+            <tbody id="tradeBody"></tbody>
+          </table>
+          <div class="empty" id="tradeEmpty" data-i18n="trade.empty"></div>
+        </div>
+
+        <div class="pane" id="pane-acct" style="display:none;padding:8px 10px">
+          <table class="mt" style="width:auto">
+            <tbody id="acctBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pane" id="pane-hist" style="display:none">
+          <table class="mt">
+            <thead><tr>
+              <th data-i18n="t.time"></th><th data-i18n="t.sym"></th><th data-i18n="t.type"></th>
+              <th data-i18n="t.vol"></th><th data-i18n="t.price"></th><th data-i18n="t.close"></th><th data-i18n="t.profit"></th>
+            </tr></thead>
+            <tbody id="histBody"></tbody>
+          </table>
+          <div class="empty" id="histEmpty" data-i18n="hist.empty"></div>
+        </div>
+
+        <div class="pane" id="pane-news" style="display:none">
+          <table class="mt">
+            <thead><tr><th data-i18n="t.time"></th><th data-i18n="t.country"></th><th data-i18n="t.event"></th><th data-i18n="t.value"></th></tr></thead>
+            <tbody id="newsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pane" id="pane-jrnl" style="display:none">
+          <div class="jrnl" id="jrnlBody"></div>
+        </div>
+      </div>
+
+      <div class="term-foot">
+        <span><span data-i18n="foot.balance"></span> <b id="fBalance">0.00</b></span>
+        <span><span data-i18n="foot.equity"></span> <b id="fEquity">0.00</b></span>
+        <span><span data-i18n="foot.margin"></span> <b id="fMargin">0.00</b></span>
+        <span><span data-i18n="foot.free"></span> <b id="fFree">0.00</b></span>
+        <span><span data-i18n="foot.level"></span> <b id="fLevel">—</b></span>
+      </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="sbar">
+      <div class="cell"><span class="bars"><i style="height:4px"></i><i style="height:7px"></i><i style="height:9px"></i></span><span id="sbConn" data-i18n="sb.conn"></span></div>
+      <div class="cell"><span data-i18n="sb.auto"></span> <b id="sbAuto">OFF</b></div>
+      <div class="cell"><span data-i18n="sb.lat"></span> <b id="sbLat">18</b> ms</div>
+      <div class="cell grow"><span id="sbMsg"></span></div>
+      <div class="cell" id="sbClock"><b>—</b></div>
+    </div>
+  </div>
+
+  <!-- 任务栏（Windows 7 样式：4格开始旗 / 検索框 / 固定图标 / 通知区域） -->
+  <div class="taskbar">
+    <button class="start" id="startBtn" title="スタート">
+      <span class="orb">
+        <svg viewBox="0 0 24 24"><path d="M3.2 4.2l7.6-1.1v7.7H3.2z" fill="#eaf6ff"/><path d="M12 2.8l8.8-1.2v8.9H12z" fill="#ffffff"/>
+        <path d="M3.2 11.7h7.6v7.7l-7.6-1.1z" fill="#9fd4f2"/><path d="M12 11.7h8.8v8.9L12 19.4z" fill="#cbe8fa"/></svg>
+      </span>
+    </button>
+    <div class="tsearch">
+      <input id="tbSearch" type="text" placeholder="検索" spellcheck="false">
+      <svg class="mag" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.3"/><path d="M10.2 10.2L14 14"/></svg>
+    </div>
+    <div class="pinbar">
+      <button class="pin" title="エクスプローラー">
+        <svg viewBox="0 0 24 24"><path d="M2 5.6h6.4l1.5 2h12.1v11.2H2z" fill="#e9c04a" stroke="#b8912a" stroke-linejoin="round"/><path d="M2 8.4h20v10.4H2z" fill="#f6da7e" stroke="#b8912a"/><path d="M2 8.4h20v2.1H2z" fill="#fdf0b8"/></svg>
+      </button>
+      <button class="pin" title="表計算">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="17" rx="1.6" fill="#2f9e7e" stroke="#1d7761"/><path d="M7.5 8.5h9M7.5 12h9M7.5 15.5h9M12 6.5v11.5" stroke="#e6f7f1" stroke-width="1.2"/></svg>
+      </button>
+      <button class="pin" title="メール">
+        <svg viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="1.4" fill="#1f8dd6" stroke="#15679c"/><path d="M3.4 6.6L12 13l8.6-6.4" fill="none" stroke="#eaf5fc" stroke-width="1.6"/></svg>
+      </button>
+      <button class="pin" title="カレンダー">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="1.6" fill="#fff" stroke="#b8b8b8"/><path d="M3 4.5h18v4.6H3z" fill="#d8423c"/><text x="12" y="17" text-anchor="middle" font-family="Arial" font-size="7" font-weight="700" fill="#c0392b">31</text></svg>
+      </button>
+      <span class="lnsep"></span>
+      <button class="run" id="taskApp" title="Kurumi Trader"><span class="ico">MT</span></button>
+    </div>
+    <div class="tray">
+      <button class="tk tk-up" title="隠れているインジケーター">
+        <svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 3.4L10.6 8.6H1.4z"/></svg>
+      </button>
+      <button class="tk" title="セキュリティ">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.4" fill="#5fbb46" stroke="#3f9a2b"/><path d="M7.8 12.2l2.9 2.9 5.5-5.9" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="tk" title="メモ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.5 17.5l-1 3 3-1 9.5-9.5-2-2z"/><path d="M16 6l2 2"/><path d="M13.5 20.5c3 .6 5.5-.4 7.5-3"/></svg>
+      </button>
+      <button class="tk" title="フォント"><span class="glyph">A</span></button>
+      <button class="tk" title="ディスプレイ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+          <rect x="2.5" y="4.5" width="16" height="11.5" rx="1"/><path d="M8.5 16v3.5M4.5 19.5h8"/><path d="M12 4.5v6h6.5"/></svg>
+      </button>
+      <button class="tk" title="音量">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" fill="currentColor" stroke="none"/><path d="M15 9a4 4 0 010 6"/><path d="M17.5 6.5a7.5 7.5 0 010 11"/></svg>
+      </button>
+      <div class="clock" id="osTime">--:--</div>
+    </div>
+  </div>
+
+  <!-- 水印 -->
+  <div class="wm">@bilibili在下张昊</div>
+
+
+  <!-- 开始菜单 -->
+  <div class="smenu" id="startMenu">
+    <div class="sm-top"><span class="sm-ava">く</span><span class="sm-user" id="smUser">福賀くるみ</span>
+      <span style="flex:1"></span>
+      <button class="pwbtn" id="smClose" title="閉じる"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>
+    </div>
+    <div class="sm-body">
+      <div class="sm-rail">
+        <button class="srail" title="アカウント"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="5.4" r="2.8"/><path d="M2.6 14c.6-2.7 2.8-4.1 5.4-4.1s4.8 1.4 5.4 4.1"/></svg></button>
+        <button class="srail" title="ドキュメント"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 4h4l1.3 1.7h5.7v6.8h-11z"/></svg></button>
+        <button class="srail" title="設定"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="2.4"/><path d="M8 1.6v1.8M8 12.6v1.8M1.6 8h1.8M12.6 8h1.8M3.5 3.5l1.3 1.3M11.2 11.2l1.3 1.3M12.5 3.5l-1.3 1.3M4.8 11.2l-1.3 1.3"/></svg></button>
+        <span class="sp"></span>
+        <button class="srail" title="電源"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2.2v5.4"/><path d="M11.9 4.3a5 5 0 11-7.8 0"/></svg></button>
+      </div>
+      <div class="sm-list" id="smList"></div>
+      <div class="sm-tiles" id="smTiles"></div>
+    </div>
+    <div class="sm-foot"><span style="font:11px var(--ui);color:#5b7fa6" id="smLang">日本語</span><span class="sp"></span>
+      <button class="pwbtn" title="電源"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2.2v5.4"/><path d="M11.9 4.3a5 5 0 11-7.8 0"/></svg></button>
+    </div>
+  </div>
+
+  <!-- 仮想ブラウザ：経済ニュース -->
+  <div class="brw" id="brw">
+    <div class="brw-t" id="brwT">
+      <span style="width:14px;height:14px;background:#b4453f;color:#fff;display:grid;place-items:center;font:700 8px var(--num)">N</span>
+      <span class="tt" id="brwTitle">経済ニュース - Kurumi Browser</span>
+      <button id="brwMin" title="最小化">–</button><button id="brwMax" title="最大化">□</button><button id="brwX" title="閉じる">×</button>
+    </div>
+    <div class="brw-bar">
+      <button class="nb" title="戻る">←</button><button class="nb" title="進む">→</button>
+      <button class="nb" title="更新">⟳</button>
+      <div class="url">http://news.kurumi-fx.jp/fx/live/</div>
+    </div>
+    <div class="brw-tabs"><div class="btab on" id="brwTab1">経済ニュース</div><div class="btab" id="brwTab2">為替</div></div>
+    <div class="brw-tick" id="brwTick"></div>
+    <div class="brw-body">
+      <div class="brw-main">
+        <div class="bh" id="brwH">最新ニュース</div>
+        <div id="brwList"></div>
+      </div>
+      <div class="brw-side">
+        <div class="bh" id="brwH2">主要通貨</div>
+        <div id="brwRates"></div>
+      </div>
+    </div>
+    <div class="brw-st"><span id="brwStatus">読み込み完了</span><span style="flex:1"></span><span>Internet</span></div>
+  </div>
+
+  <!-- ニュース速報ポップアップ -->
+  <div class="npop" id="npop">
+    <div class="npop-h"><span class="tt" id="npopHead">ニュース速報</span><button id="npopX">×</button></div>
+    <div class="npop-b"><span class="npop-i">!</span>
+      <div><div class="npop-t" id="npopT"></div><div class="npop-s" id="npopS"></div></div>
+    </div>
+  </div>
+
+  <div class="mask" id="mask"><div class="dlg" id="dlg"></div></div>
+
+  <!-- 口座を選択 -->
+  <div class="mask" id="acctMask"><div class="adlg" id="acctDlg">
+    <div class="ad-t"><span data-i18n="acct.title">口座を選択</span><span class="sp"></span>
+      <button type="button" title="ヘルプ">?</button><button type="button" id="acctX">×</button></div>
+    <div class="ad-body">
+      <div class="ad-lead" data-i18n="acct.pick">口座を選択してください</div>
+      <div class="ad-box">
+        <div class="ad-search">
+          <input id="acctQ" type="text" placeholder="検索…">
+          <button type="button" id="acctFind" data-i18n="acct.find">検索</button>
+        </div>
+        <div class="ad-list" id="acctList"></div>
+      </div>
+    </div>
+    <div class="ad-foot">
+      <button type="button" id="acctCancel" data-i18n="btn.cancel">キャンセル</button>
+      <button type="button" id="acctOk" class="primary" data-i18n="btn.ok">OK</button>
+    </div>
+  </div></div>
+</div>
+<script>
+/* =========================================================
+   Kurumi Trader — MT4 风格（日文版）复刻
+   纯前端 · 零依赖 · 中日双语
+   ========================================================= */
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.prototype.slice.call(document.querySelectorAll(s));
+  const pad = (n) => String(n).padStart(2, '0');
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  /* ================= 窗口管理：置顶层级 ================= */
+  let zTop = 10;
+  function raise(el) { if (el) el.style.zIndex = ++zTop; }
+  function raiseMask(el) { if (el) { el.style.zIndex = ++zTop; el.classList.add('on'); } }
+
+  /* ================= 语言 ================= */
+  const I18N = {
+    'tb.newOrder': { ja: '新規注文', zh: '新规订单' },
+    'tip.workspace': { ja: 'ワークスペース', zh: '工作区' },
+    'tip.buy': { ja: '新規買い注文', zh: '新建买入订单' },
+    'tip.sell': { ja: '新規売り注文', zh: '新建卖出订单' },
+
+    'menu.file': { ja: 'ファイル', zh: '文件' },
+    'menu.view': { ja: '表示', zh: '视图' },
+    'menu.chart': { ja: 'チャート', zh: '图表' },
+    'menu.tools': { ja: 'ツール', zh: '工具' },
+    'menu.insert': { ja: '挿入', zh: '插入' },
+    'menu.window': { ja: 'ウィンドウ', zh: '窗口' },
+    'menu.help': { ja: 'ヘルプ', zh: '帮助' },
+
+    'mi.newOrder': { ja: '新規注文', zh: '新规订单' },
+    'mi.closeAll': { ja: '全ポジション決済', zh: '全部平仓' },
+    'mi.deposit': { ja: '入金', zh: '入金' },
+    'mi.logout': { ja: 'ログアウト', zh: '注销' },
+    'mi.exit': { ja: '終了', zh: '退出' },
+    'mi.mw': { ja: '気配値', zh: '报价窗口' },
+    'mi.term': { ja: 'ターミナル', zh: '终端' },
+    'mi.grid': { ja: 'グリッド', zh: '网格' },
+    'mi.cross': { ja: '十字カーソル', zh: '十字光标' },
+    'mi.lang': { ja: '言語', zh: '语言' },
+    'mi.ma': { ja: '移動平均線', zh: '移动平均线' },
+    'mi.posline': { ja: '建玉ライン', zh: '持仓线' },
+    'mi.fullscreen': { ja: '全画面表示', zh: '全屏显示' },
+    'mi.auto': { ja: '自動売買', zh: '自动交易' },
+    'mi.opt': { ja: 'オプション', zh: '选项' },
+    'mi.ind': { ja: 'インジケーター', zh: '指标' },
+    'mi.obj': { ja: 'オブジェクト', zh: '对象' },
+    'mi.tile': { ja: '重ねて表示', zh: '层叠窗口' },
+    'mi.help': { ja: 'ヘルプ', zh: '帮助主题' },
+    'mi.about': { ja: 'バージョン情報', zh: '关于' },
+    'mi.ja': { ja: '日本語', zh: '日本語' },
+    'mi.zh': { ja: '中文（简体）', zh: '中文（简体）' },
+
+    'mw.title': { ja: '気配値', zh: '报价' },
+    'mw.sym': { ja: '通貨ペア', zh: '货币对' },
+    'mw.bid': { ja: '入札', zh: '买价' },
+    'mw.ask': { ja: '売値', zh: '卖价' },
+
+    'oc.sell': { ja: 'SELL', zh: 'SELL' },
+    'oc.buy': { ja: 'BUY', zh: 'BUY' },
+
+    'term.trade': { ja: '取引', zh: '交易' },
+    'term.acct': { ja: '口座状況', zh: '账户状况' },
+    'term.hist': { ja: '口座履歴', zh: '账户历史' },
+    'term.news': { ja: 'ニュース', zh: '新闻' },
+    'term.jrnl': { ja: 'ジャーナル', zh: '日志' },
+
+    't.ticket': { ja: '注文', zh: '订单号' },
+    't.time': { ja: '時間', zh: '时间' },
+    't.sym': { ja: '通貨ペア', zh: '货币对' },
+    't.type': { ja: '種類', zh: '类型' },
+    't.vol': { ja: '数量', zh: '数量' },
+    't.price': { ja: '価格', zh: '价格' },
+    't.cur': { ja: '現在値', zh: '现价' },
+    't.profit': { ja: '利益', zh: '盈亏' },
+    't.swap': { ja: 'スワップ', zh: '隔夜息' },
+    't.close': { ja: '決済価格', zh: '平仓价' },
+    't.country': { ja: '通貨', zh: '币种' },
+    't.event': { ja: '指標', zh: '指标' },
+    't.value': { ja: '結果', zh: '结果' },
+    't.buy': { ja: '買', zh: '买入' },
+    't.sell': { ja: '売', zh: '卖出' },
+    'trade.empty': { ja: 'ポジションはありません', zh: '当前没有持仓' },
+    'hist.empty': { ja: '履歴はありません', zh: '暂无历史记录' },
+
+    'foot.balance': { ja: '残高:', zh: '余额:' },
+    'foot.equity': { ja: '有効証拠金:', zh: '净值:' },
+    'foot.margin': { ja: '必要証拠金:', zh: '已用保证金:' },
+    'foot.free': { ja: '余力:', zh: '可用:' },
+    'foot.level': { ja: '維持率:', zh: '保证金率:' },
+
+    'sb.conn': { ja: '接続中', zh: '已连接' },
+    'sb.auto': { ja: '自動売買', zh: '自动交易' },
+    'sb.lat': { ja: 'レイテンシ', zh: '延迟' },
+    'task.title': { ja: 'Kurumi Trader', zh: 'Kurumi Trader' },
+
+    'acct.balance': { ja: '残高', zh: '账户余额' },
+    'acct.equity': { ja: '有効証拠金', zh: '净值' },
+    'acct.margin': { ja: '必要証拠金', zh: '已用保证金' },
+    'acct.free': { ja: '利用可能証拠金', zh: '可用保证金' },
+    'acct.level': { ja: '証拠金維持率', zh: '保证金维持率' },
+    'acct.pl': { ja: '評価損益', zh: '浮动盈亏' },
+    'acct.credit': { ja: 'クレジット', zh: '信用额' },
+    'acct.currency': { ja: '口座通貨', zh: '账户币种' },
+    'acct.lev': { ja: 'レバレッジ', zh: '杠杆' },
+
+    'dlg.new': { ja: '新規注文', zh: '新规订单' },
+    'dlg.close': { ja: 'ポジション決済', zh: '平仓' },
+    'dlg.about': { ja: 'バージョン情報', zh: '关于' },
+    'dlg.help': { ja: 'ヘルプ', zh: '帮助' },
+    'dlg.deposit': { ja: '入金', zh: '入金' },
+    'acct.title': { ja: '口座を選択', zh: '选择账户' },
+    'acct.pick': { ja: '口座を選択してください', zh: '请选择账户' },
+    'acct.find': { ja: '検索', zh: '搜索' },
+    'acct.ph': { ja: '検索…', zh: '搜索…' },
+    'acct.empty': { ja: '該当する口座がありません', zh: '没有匹配的账户' },
+    'acct.ok': { ja: '口座 {n}（{b}）に接続しました', zh: '已连接账户 {n}（{b}）' },
+    'acct.cancel': { ja: '口座の選択をキャンセルしました', zh: '已取消账户选择' },
+    'mi.acct': { ja: '口座を選択...', zh: '选择账户...' },
+    'acct.no': { ja: '口座番号', zh: '账户号码' },
+    'acct.name': { ja: '口座名', zh: '账户名称' },
+    'f.sym': { ja: '通貨ペア', zh: '货币对' },
+    'f.vol': { ja: '数量', zh: '数量' },
+    'f.exec': { ja: '執行', zh: '执行方式' },
+    'f.execMarket': { ja: '即時実行', zh: '市价执行' },
+    'f.execLimit': { ja: '指値', zh: '限价' },
+    'f.execStop': { ja: '逆指値', zh: '触发价' },
+    'f.price': { ja: '価格', zh: '价格' },
+    'f.sl': { ja: 'ストップロス(S/L)', zh: '止损(S/L)' },
+    'f.tp': { ja: '利益確定(T/P)', zh: '止盈(T/P)' },
+    'f.type': { ja: '注文種類', zh: '订单类型' },
+    'o.market': { ja: '成行注文', zh: '市价订单' },
+    'o.limit': { ja: '指値注文', zh: '限价订单' },
+    'o.stop': { ja: '逆指値注文', zh: '止损订单' },
+    'o.sellMkt': { ja: '成行売り', zh: '市价卖出' },
+    'o.buyMkt': { ja: '成行買い', zh: '市价买入' },
+    'o.sellLimit': { ja: '指値売り', zh: '限价卖出' },
+    'o.buyLimit': { ja: '指値買い', zh: '限价买入' },
+    'o.sellStop': { ja: '逆指値売り', zh: '触价卖出' },
+    'o.buyStop': { ja: '逆指値買い', zh: '触价买入' },
+    'o.note1': { ja: '成行注文の約定価格は市場の状況により決定されます。', zh: '市价订单的成交价由市场现状决定。' },
+    'o.note2': { ja: '参考価格と異なる場合があります。', zh: '可能会与参考价格有所不同。' },
+    'o.noteL1': { ja: '指定した価格に達した時点で約定します。', zh: '价格达到所指定的价位时成交。' },
+    'o.symFmt': { ja: ' 対 ', zh: ' 对 ' },
+    't.limitBuy': { ja: '指値買い', zh: '限价买入' },
+    't.limitSell': { ja: '指値売り', zh: '限价卖出' },
+    't.stopBuy': { ja: '逆指値買い', zh: '触价买入' },
+    't.stopSell': { ja: '逆指値売り', zh: '触价卖出' },
+    'jrnl.pending': { ja: '指値注文: {s} {v} {p}', zh: '挂单：{s} {v} {p}' },
+    'jrnl.cancel': { ja: '注文取消: #{id}', zh: '撤销订单：#${id}' },
+    'f.comment': { ja: 'コメント', zh: '备注' },
+    'f.margin': { ja: '必要証拠金', zh: '所需保证金' },
+    'btn.sell': { ja: '売', zh: '卖出' },
+    'btn.buy': { ja: '買', zh: '买入' },
+    'btn.cancel': { ja: 'キャンセル', zh: '取消' },
+    'btn.ok': { ja: 'OK', zh: '确定' },
+    'btn.close': { ja: '決済', zh: '平仓' },
+    'btn.dep': { ja: '10万円入金', zh: '入金 10 万日元' },
+
+    'toast.filled': { ja: '約定しました', zh: '已成交' },
+    'toast.closed': { ja: '決済しました', zh: '已平仓' },
+    'toast.losscut': { ja: 'ロスカット執行', zh: '强制平仓' },
+    'toast.marginWarn': { ja: '証拠金維持率が低下', zh: '保证金率过低' },
+    'toast.noMargin': { ja: '証拠金不足', zh: '保证金不足' },
+    'toast.deposit': { ja: '入金完了', zh: '入金完成' },
+    'toast.mini': { ja: '最小化しました（タスクバーで復元）', zh: '已最小化（点击任务栏恢复）' },
+    'toast.demo': { ja: 'デモ口座 — 実際の取引は行われません', zh: '模拟账户 — 不会进行真实交易' },
+
+    'jrnl.start': { ja: 'Kurumi Trader 起動 (build 4.00)', zh: 'Kurumi Trader 启动 (build 4.00)' },
+    'jrnl.login': { ja: 'ログイン完了: 口座 87312046 (デモ)', zh: '登录成功：账户 87312046（模拟）' },
+    'jrnl.buy': { ja: '注文: 買 {v} {s} 約定 {p}', zh: '订单：买入 {v} {s} 成交 {p}' },
+    'jrnl.sell': { ja: '注文: 売 {v} {s} 約定 {p}', zh: '订单：卖出 {v} {s} 成交 {p}' },
+    'jrnl.close': { ja: '決済: #{id} {s} {v} 利益 {p}', zh: '平仓：#${id} {s} {v} 盈亏 {p}' },
+    'jrnl.losscut': { ja: '強制ロスカット: 維持率 {r}% を下回りました', zh: '强制平仓：保证金率跌破 {r}%' },
+    'jrnl.deposit': { ja: '入金: +{p} 残高 {b}', zh: '入金：+{p} 余额 {b}' },
+    'jrnl.lang': { ja: '言語を {l} に変更', zh: '界面语言切换为 {l}' },
+
+    'ma.label': { ja: '移動平均', zh: '均线' },
+    'news.JP': { ja: '日本', zh: '日本' },
+    'news.US': { ja: '米国', zh: '美国' },
+    'news.EU': { ja: 'ユーロ圏', zh: '欧元区' },
+    'news.UK': { ja: '英国', zh: '英国' },
+    'news.AU': { ja: '豪州', zh: '澳大利亚' },
+    'pw.win': { ja: '含み益〜♡', zh: '有浮盈～♡' }
+  };
+  let LANG = 'ja';
+  const t = (k, vars) => {
+    const e = I18N[k];
+    let s = e ? (e[LANG] != null ? e[LANG] : e.ja) : k;
+    if (vars) s = s.replace(/\{(\w+)\}/g, (m, g) => (vars[g] != null ? vars[g] : m));
+    return s;
+  };
+
+  /* ================= 行情数据 ================= */
+  const TF = {
+    M1: { g: 6, min: 1, ja: 'M1', zh: 'M1' },
+    M5: { g: 12, min: 5 },
+    M15: { g: 22, min: 15 },
+    M30: { g: 34, min: 30 },
+    H1: { g: 50, min: 60 },
+    H4: { g: 70, min: 240 },
+    D1: { g: 90, min: 1440 },
+    W1: { g: 110, min: 10080 },
+    MN: { g: 130, min: 43200 }
+  };
+  const PAIRS = [
+    { code: 'AUDJPY', ja: '豪ドル/円', zh: '澳元/日元', px: 93.352, dg: 3, pip: 0.01, vol: 0.05, sp: 3 },
+    { code: 'USDJPY', ja: '米ドル/円', zh: '美元/日元', px: 157.203, dg: 3, pip: 0.01, vol: 0.055, sp: 2 },
+    { code: 'EURJPY', ja: 'ユーロ/円', zh: '欧元/日元', px: 171.845, dg: 3, pip: 0.01, vol: 0.075, sp: 3 },
+    { code: 'GBPJPY', ja: '英ポンド/円', zh: '英镑/日元', px: 199.412, dg: 3, pip: 0.01, vol: 0.10, sp: 5 },
+    { code: 'EURUSD', ja: 'ユーロ/米ドル', zh: '欧元/美元', px: 1.09324, dg: 5, pip: 0.0001, vol: 0.00035, sp: 2 },
+    { code: 'GBPUSD', ja: '英ポンド/米ドル', zh: '英镑/美元', px: 1.26854, dg: 5, pip: 0.0001, vol: 0.0005, sp: 3 },
+    { code: 'AUDUSD', ja: '豪ドル/米ドル', zh: '澳元/美元', px: 0.66120, dg: 5, pip: 0.0001, vol: 0.00032, sp: 2 }
+  ];
+  const P = {};
+  PAIRS.forEach((p) => { P[p.code] = { cfg: p, ticks: [], prev: 0 }; });
+
+  const S = {
+    sym: 'AUDJPY', tf: 'M1', candles: [], vol: 15,
+    showMW: false, showTerm: true, showGrid: true, showCross: true,
+    showMA: false, showPosLine: false, auto: false,
+    mouse: { x: null, y: null }, hover: null, last: 0
+  };
+  const ACC = { balance: 3000000, currency: 'JPY', lev: 25, no: '1112093', brand: 'FXRealAsia' };
+  const ACCOUNTS = [
+    { brand: 'FXRealAsia', no: '1112093' },
+    { brand: 'FXRealAsia', no: '1112104' },
+    { brand: 'FXRealAsia Demo', no: '5002187' }
+  ];
+  let positions = [], history = [], journal = [];
+  let seq = 50000000, locked = false, warned = false;
+
+  const mid = (c) => P[c].ticks[P[c].ticks.length - 1];
+  const fmt = (n, d) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const num2 = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const sgn = (n, d) => (n > 0 ? '+' : '') + fmt(n, d == null ? 2 : d);
+
+  function quote(code) {
+    const st = P[code], cfg = st.cfg, m = mid(code), h = cfg.pip * cfg.sp * 0.5;
+    return { bid: +(m - h).toFixed(cfg.dg), ask: +(m + h).toFixed(cfg.dg), mid: m };
+  }
+  const qToJpy = (code) => (code.slice(-3) === 'JPY' ? 1 : mid('USDJPY'));
+  const lotUnits = (lots) => lots * 10000;                 // 1.00 ロット = 1万通貨
+  function valueJpy(code, price, lots) {
+    const q = code.slice(-3);
+    return lotUnits(lots) * price * (q === 'JPY' ? 1 : mid('USDJPY'));
+  }
+  function posPl(p) {
+    if (p.pending) return 0;
+    const m = mid(p.sym), diff = p.side === 'buy' ? m - p.price : p.price - m;
+    return diff * lotUnits(p.vol) * qToJpy(p.sym);
+  }
+
+  function initMarket() {
+    PAIRS.forEach((cfg) => {
+      const st = P[cfg.code]; const n = 700; let p = cfg.px; const arr = [];
+      for (let i = 0; i < n; i++) { p += (cfg.px - p) * 0.004 + (Math.random() - 0.5) * cfg.vol * 2.2; arr.push(p); }
+      st.ticks = arr; st.prev = arr[n - 26] || arr[0]; st.n = n;
+    });
+  }
+  let ocT = 0;
+  function flashOC(up) {
+    const el = document.getElementById('oneclick'); if (!el) return;
+    if (up) { el.classList.remove('down'); clearTimeout(ocT); return; }
+    el.classList.add('down'); clearTimeout(ocT);
+    ocT = setTimeout(() => el.classList.remove('down'), 900);   // 跌价后 0.9 秒恢复靛蓝
+  }
+
+  function tickMarket() {
+    PAIRS.forEach((cfg) => {
+      const st = P[cfg.code], last = st.ticks[st.ticks.length - 1];
+      let nx = last + (cfg.px - last) * 0.006 + (Math.random() - 0.5) * cfg.vol * 1.7 + (st.bias || 0);
+      if (st.bias) { st.bias *= 0.90; if (Math.abs(st.bias) < cfg.vol * 0.02) st.bias = 0; }
+      if (Math.random() < 0.0025) nx += (Math.random() - 0.5) * cfg.vol * 7;
+      nx = clamp(nx, cfg.px * 0.88, cfg.px * 1.12);
+      st.ticks.push(nx); st.n++;
+      if (st.ticks.length > 1200) st.ticks.shift();
+      if (cfg.code === S.sym) flashOC(nx >= last);
+    });
+  }
+
+  /* ================= 图表 ================= */
+  const cv = $('#chart'), ctx = cv.getContext('2d');
+  let CW = 0, CH = 0, DPR = 1;
+  const PADR = 62, PADB = 18, PADT = 4, PADL = 0;
+
+  function resize() {
+    const r = $('#chartTop').getBoundingClientRect();
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    CW = Math.max(160, r.width); CH = Math.max(120, r.height);
+    cv.width = Math.round(CW * DPR); cv.height = Math.round(CH * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    draw();
+  }
+  window.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe($('#chartTop'));
+
+  function buildCandles() {
+    const st = P[S.sym], T = st.ticks, g = TF[S.tf].g, n = T.length;
+    if (!n) return [];
+    const base = st.n - n;                       // ticks[0] 的全局序号
+    const lastB = Math.floor((st.n - 1) / g);    // 当前桶号（绝对，不随窗口滑动）
+    const out = [];
+    for (let b = lastB; b >= 0 && out.length < 120; b--) {
+      const from = b * g - base;
+      const to = (b + 1) * g - 1 - base;
+      if (to < 0 || from > n - 1) continue;
+      const s = Math.max(0, from), e = Math.min(n - 1, to);
+      let hi = -Infinity, lo = Infinity;
+      for (let i = s; i <= e; i++) { if (T[i] > hi) hi = T[i]; if (T[i] < lo) lo = T[i]; }
+      out.unshift({ o: T[s], c: T[e], h: hi, l: lo });
+    }
+    return out;
+  }
+
+  function draw() {
+    if (!CW) return;
+    const cfg = P[S.sym].cfg, dg = cfg.dg, C = S.candles;
+    const W = CW - PADR, H = CH - PADB;
+    ctx.clearRect(0, 0, CW, CH);
+
+    // 绘图区背景（纯白）+ 价格轴底
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, CW, CH);
+    ctx.fillStyle = '#fbfbfb'; ctx.fillRect(W, 0, PADR, CH);
+
+    if (C.length < 2) return;
+    let hi = -Infinity, lo = Infinity;
+    C.forEach((k) => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
+    const padY = (hi - lo) * 0.12 || cfg.pip * 4;
+    hi += padY; lo -= padY;
+    // 视野平滑：越界立刻扩展，回落时缓慢收缩 —— 消除每帧整体上下跳动
+    if (!S.rng || S.rng.sym !== S.sym || S.rng.tf !== S.tf) S.rng = { sym: S.sym, tf: S.tf, hi: hi, lo: lo };
+    else {
+      if (hi > S.rng.hi) S.rng.hi = hi;
+      if (lo < S.rng.lo) S.rng.lo = lo;
+      S.rng.hi += (hi - S.rng.hi) * 0.02;
+      S.rng.lo += (lo - S.rng.lo) * 0.02;
+      if (S.rng.hi < hi) S.rng.hi = hi;
+      if (S.rng.lo > lo) S.rng.lo = lo;
+    }
+    hi = S.rng.hi; lo = S.rng.lo;
+    const n = C.length, step = W / n;
+    const x = (i) => PADL + step * (i + 0.5);
+    const y = (v) => PADT + (hi - v) / (hi - lo) * H;
+
+    // 细密点阵（模拟参考图的网格质感）
+    ctx.fillStyle = '#e9e9e9';
+    for (let gx = 0; gx < W; gx += 9) for (let gy = PADT; gy < H; gy += 9) ctx.fillRect(gx, gy, 1, 1);
+
+    // 水平价格线（点线）+ 右侧刻度
+    const digits = dg;
+    const stepPx = 38;                                     // 每 50px 一条价格线
+    const pricePerPx = (hi - lo) / H;
+    const tickVal = niceStep(pricePerPx * stepPx, digits, cfg.pip);
+    const first = Math.ceil(lo / tickVal) * tickVal;
+    ctx.font = '11px Tahoma, "Segoe UI", Arial';
+    ctx.textBaseline = 'middle';
+    for (let v = first; v <= hi; v += tickVal) {
+      const yy = Math.round(y(v)) + 0.5;
+      if (yy < PADT || yy > H) continue;
+      if (S.showGrid) {
+        ctx.setLineDash([1, 2]); ctx.strokeStyle = '#d9d9d9'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = '#3b3b3b'; ctx.textAlign = 'left';
+      ctx.fillText(fmt(v, digits), W + 7, yy);
+    }
+
+    // 时间轴
+    const tfMin = TF[S.tf].min, now = Date.now();
+    ctx.strokeStyle = '#d0d0d0'; ctx.beginPath(); ctx.moveTo(0, H + 0.5); ctx.lineTo(CW, H + 0.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W + 0.5, 0); ctx.lineTo(W + 0.5, CH); ctx.stroke();
+    ctx.fillStyle = '#3b3b3b'; ctx.font = '10px Tahoma, "Segoe UI", Arial'; ctx.textAlign = 'center';
+    const every = Math.ceil(n / 7);
+    for (let i = 0; i < n; i += every) {
+      const px = x(i);
+      if (px > W - 24 || px < 26) continue;
+      const d = new Date(now - (n - 1 - i) * tfMin * 60000);
+      const lb = tfMin >= 1440 ? pad(d.getMonth() + 1) + '.' + pad(d.getDate()) : pad(d.getHours()) + ':' + pad(d.getMinutes());
+      if (S.showGrid) {
+        ctx.setLineDash([1, 2]); ctx.strokeStyle = '#e2e2e2';
+        ctx.beginPath(); ctx.moveTo(Math.round(px) + 0.5, PADT); ctx.lineTo(Math.round(px) + 0.5, H); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = '#3b3b3b';
+      ctx.fillText(lb, px, H + 9);
+    }
+
+    // 蜡烛
+    const bw = Math.max(1, Math.min(8, step * 0.62));
+    for (let i = 0; i < n; i++) {
+      const k = C[i], up = k.c >= k.o;
+      const col = up ? '#e14b4b' : '#4aa8e0';
+      const cx = Math.round(x(i)) + 0.5;
+      ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, y(k.h)); ctx.lineTo(cx, y(k.l)); ctx.stroke();
+      const yo = y(k.o), yc = y(k.c), top = Math.min(yo, yc), hh = Math.max(1, Math.abs(yc - yo));
+      ctx.fillRect(Math.round(cx - bw / 2), Math.round(top), Math.round(bw), Math.round(hh));
+    }
+
+    // 移动平均线
+    if (S.showMA) {
+      const ma = (len, color) => {
+        ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 1;
+        let started = false;
+        for (let i = 0; i < n; i++) {
+          if (i < len - 1) continue;
+          let s = 0; for (let j = i - len + 1; j <= i; j++) s += C[j].c;
+          const px = x(i), py = y(s / len);
+          if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      };
+      ma(13, '#e0a63c');
+      ma(34, '#c04ad0');
+    }
+
+    // 建玉ライン
+    if (S.showPosLine) {
+      positions.filter((p) => p.sym === S.sym).forEach((p) => {
+        const yy = Math.round(y(p.price)) + 0.5;
+        ctx.setLineDash([4, 3]); ctx.strokeStyle = p.side === 'buy' ? '#2f8f4f' : '#c0392b';
+        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke(); ctx.setLineDash([]);
+        const label = (p.side === 'buy' ? '買 ' : '売 ') + p.vol.toFixed(2) + '  ' + fmt(p.price, dg);
+        ctx.font = '10px Tahoma, "Segoe UI", Arial';
+        const tw = ctx.measureText(label).width + 8;
+        ctx.fillStyle = p.side === 'buy' ? '#2f8f4f' : '#c0392b';
+        ctx.fillRect(W - tw - 2, yy - 12, tw, 11);
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, W - tw + 2, yy - 6);
+      });
+    }
+
+    // 现价线 + 黑色价格标签（参考图特征）
+    const lastPx = C[n - 1].c;
+    const yl = Math.round(y(lastPx)) + 0.5;
+    ctx.setLineDash([2, 2]); ctx.strokeStyle = '#9a9a9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, yl); ctx.lineTo(W, yl); ctx.stroke(); ctx.setLineDash([]);
+    const tag = fmt(lastPx, dg);
+    ctx.font = '11px Tahoma, "Segoe UI", Arial';
+    const tagW = Math.max(52, ctx.measureText(tag).width + 12);
+    ctx.fillStyle = '#1b1b1b';
+    ctx.fillRect(W + 2, yl - 8, tagW - 4, 16);
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(tag, W + 6, yl);
+
+    // 十字カーソル
+    const M = S.mouse;
+    if (S.showCross && M.x != null && M.x >= 0 && M.x <= W && M.y >= 0 && M.y <= H) {
+      const i = clamp(Math.floor(M.x / step), 0, n - 1);
+      const cx = Math.round(x(i)) + 0.5;
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = '#8a8a8a';
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, Math.round(M.y) + 0.5); ctx.lineTo(W, Math.round(M.y) + 0.5); ctx.stroke();
+      ctx.setLineDash([]);
+      const v = hi - (M.y / H) * (hi - lo);
+      const vl = fmt(v, dg);
+      ctx.fillStyle = '#1b1b1b';
+      ctx.fillRect(W + 2, M.y - 8, Math.max(52, ctx.measureText(vl).width + 10), 16);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+      ctx.fillText(vl, W + 6, M.y);
+      const d = new Date(now - (n - 1 - i) * tfMin * 60000);
+      const tl = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      ctx.fillStyle = '#1b1b1b';
+      ctx.fillRect(cx - 20, H + 2, 40, 14);
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+      ctx.fillText(tl, cx, H + 9);
+      S.hover = C[i];
+    } else S.hover = null;
+  }
+
+  function niceStep(raw, dg, pip) {
+    const p = Math.pow(10, dg);
+    const cands = [pip, pip * 2, pip * 5, pip * 10, pip * 20, pip * 50, pip * 100, pip * 200, pip * 500, pip * 1000];
+    for (const c of cands) if (c >= raw * 0.5) return c;
+    return pip * 2000;
+  }
+
+  $('#chartTop').addEventListener('mousemove', (e) => {
+    const r = cv.getBoundingClientRect();
+    S.mouse.x = e.clientX - r.left; S.mouse.y = e.clientY - r.top; draw();
+  });
+  $('#chartTop').addEventListener('mouseleave', () => { S.mouse.x = S.mouse.y = null; draw(); });
+
+  /* ================= 気配値 ================= */
+  function buildMW() {
+    const list = $('#mwList'); list.innerHTML = '';
+    PAIRS.forEach((cfg) => {
+      const row = document.createElement('div');
+      row.className = 'mw-row' + (cfg.code === S.sym ? ' sel' : '');
+      row.innerHTML = '<span class="sym"></span><span class="bid"></span><span class="ask"></span>';
+      row.children[0].textContent = cfg.code;
+      row.addEventListener('click', () => setSymbol(cfg.code));
+      list.appendChild(row);
+      P[cfg.code].row = row;
+    });
+    updateMW(true);
+  }
+  function updateMW() {
+    PAIRS.forEach((cfg) => {
+      const q = quote(cfg.code), row = P[cfg.code].row;
+      if (!row) return;
+      row.children[1].textContent = fmt(q.bid, cfg.dg);
+      row.children[2].textContent = fmt(q.ask, cfg.dg);
+      row.classList.toggle('sel', cfg.code === S.sym);
+    });
+    const q = quote(S.sym);
+    $('#mwSpread').textContent = (P[S.sym].cfg.sp / 10).toFixed(1) + ' pips';
+    $('#mwTime').textContent = hhmmss();
+  }
+  function setSymbol(code) {
+    if (!P[code]) return;
+    S.sym = code; S.rng = null; S.candles = buildCandles();
+    $('#symText').textContent = code;
+    updateMW(); updateOneClick(); updateTitle(); updateTermFoot(); draw();
+  }
+
+  /* ================= 一键下单 ================= */
+  function ocHtml(v, dg) {
+    const s = v.toFixed(dg), parts = s.split('.');
+    const dec = parts[1] || '';
+    return '<span class="oc-int">' + parts[0] + '</span>' +
+      '<span class="oc-big">' + dec.slice(0, -1) + '</span>' +
+      '<span class="oc-sup">' + dec.slice(-1) + '</span>';
+  }
+  function updateOneClick() {
+    const q = quote(S.sym), dg = P[S.sym].cfg.dg;
+    $('#ocBid').innerHTML = ocHtml(q.bid, dg);
+    $('#ocAsk').innerHTML = ocHtml(q.ask, dg);
+    $('#ocVol').textContent = S.vol.toFixed(2);
+  }
+  $('#ocSell').addEventListener('click', () => execute('sell'));
+  $('#ocBid').addEventListener('click', () => execute('sell'));
+  $('#ocBuy').addEventListener('click', () => execute('buy'));
+  $('#ocAsk').addEventListener('click', () => execute('buy'));
+  $('#ocPrev').addEventListener('click', () => { S.vol = Math.min(100, +(S.vol + 1).toFixed(2)); updateOneClick(); });
+  $('#ocNext').addEventListener('click', () => { S.vol = Math.max(0.01, +(S.vol - 1).toFixed(2)); updateOneClick(); });
+
+  /* ================= 交易 ================= */
+  const now2 = () => { const d = new Date(); return d; };
+  const hhmmss = () => { const d = now2(); return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
+  const dt = () => { const d = now2(); return d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); };
+
+  function pushJournal(text) {
+    journal.push({ t: dt(), m: text });
+    if (journal.length > 200) journal.shift();
+    renderJournal();
+  }
+
+  function account() {
+    const pl = positions.reduce((s, p) => s + posPl(p) + p.swap, 0);
+    const margin = positions.reduce((s, p) => s + (p.pending ? 0 : valueJpy(p.sym, mid(p.sym), p.vol) / ACC.lev), 0);
+    const equity = ACC.balance + pl;
+    return { pl, margin, equity, free: equity - margin, level: margin > 0 ? (equity / margin) * 100 : Infinity };
+  }
+
+  function execute(side, opts) {
+    opts = opts || {};
+    const sym = opts.sym || S.sym;
+    const vol = opts.vol || S.vol;
+    const type = opts.type || 'market';
+    const cfg = P[sym].cfg, q = quote(sym);
+    const a = account();
+    const px = side === 'buy' ? q.ask : q.bid;
+    const need = valueJpy(sym, px, vol) / ACC.lev;
+    if (need > a.free) { pushJournal(t('toast.noMargin') + ' — ' + sym + ' ' + vol.toFixed(2)); flash('No money'); return false; }
+    const id = ++seq;
+    if (type !== 'market') {
+      const req = +(opts.price || px).toFixed(cfg.dg);
+      if ((type === 'limit' && ((side === 'buy' && req >= q.ask) || (side === 'sell' && req <= q.bid))) ||
+        (type === 'stop' && ((side === 'buy' && req <= q.ask) || (side === 'sell' && req >= q.bid)))) {
+        pushJournal((LANG === 'ja' ? '価格が不正です: ' : '价格无效：') + fmt(req, cfg.dg));
+        flash(LANG === 'ja' ? '価格が不正です' : '价格无效');
+        return false;
+      }
+      positions.push({
+        id, sym, side, vol, price: 0, reqPrice: req, type, pending: true,
+        time: dt(), swap: 0, sl: +(opts.sl || 0), tp: +(opts.tp || 0)
+      });
+      pushJournal(t('jrnl.pending', { s: sym, v: vol.toFixed(2), p: fmt(req, cfg.dg) }));
+      renderTrade(); updateTermFoot(); flash((side === 'buy' ? '買 ' : '売 ') + vol.toFixed(2) + ' ' + fmt(req, cfg.dg));
+      return true;
+    }
+    const p = {
+      id, sym, side, vol, price: +px.toFixed(cfg.dg), time: dt(),
+      swap: Math.round((Math.random() - 0.4) * 60 * vol), sl: 0, tp: 0
+    };
+    if (opts && opts.sl) p.sl = opts.sl;
+    if (opts && opts.tp) p.tp = opts.tp;
+    positions.push(p);
+    pushJournal(t(side === 'buy' ? 'jrnl.buy' : 'jrnl.sell', { v: vol.toFixed(2), s: sym, p: fmt(px, cfg.dg) }) + '  sl: ' + (p.sl || 0) + '  tp: ' + (p.tp || 0));
+    renderTrade(); updateTermFoot(); flash(side === 'buy' ? '買 ' + vol.toFixed(2) : '売 ' + vol.toFixed(2));
+    return true;
+  }
+
+  function closePos(id) {
+    const p = positions.find((x) => x.id === id); if (!p) return;
+    if (p.pending) {
+      positions = positions.filter((x) => x.id !== id);
+      pushJournal(t('jrnl.cancel', { id: p.id }));
+      renderTrade(); updateTermFoot(); return;
+    }
+    const q = quote(p.sym), cfg = P[p.sym].cfg;
+    const px = p.side === 'buy' ? q.bid : q.ask;
+    const pl = posPl(p) + p.swap;
+    ACC.balance += pl;
+    history.push({ time: p.time, sym: p.sym, side: p.side, vol: p.vol, price: p.price, close: +px.toFixed(cfg.dg), pl });
+    positions = positions.filter((x) => x.id !== id);
+    pushJournal(t('jrnl.close', { id: p.id, s: p.sym, v: p.vol.toFixed(2), p: (pl >= 0 ? '+' : '') + num2(pl) }));
+    renderTrade(); renderHist(); updateTermFoot(); draw();
+  }
+  function closeAll() {
+    if (!positions.length) return;
+    positions.slice().forEach((p) => closePos(p.id));
+  }
+
+  function checkPending() {
+    positions.slice().forEach((p) => {
+      if (!p.pending) return;
+      const q = quote(p.sym), cfg = P[p.sym].cfg;
+      const hit = p.type === 'limit'
+        ? (p.side === 'buy' ? q.ask <= p.reqPrice : q.bid >= p.reqPrice)
+        : (p.side === 'buy' ? q.ask >= p.reqPrice : q.bid <= p.reqPrice);
+      if (hit) {
+        p.pending = false; p.price = +(p.reqPrice).toFixed(cfg.dg);
+        pushJournal(t(p.side === 'buy' ? 'jrnl.buy' : 'jrnl.sell', { v: p.vol.toFixed(2), s: p.sym, p: fmt(p.price, cfg.dg) }));
+        renderTrade(); updateTermFoot(); flash(t('toast.filled') + ' ' + p.sym + ' ' + fmt(p.price, cfg.dg));
+      }
+    });
+  }
+
+  function checkSLTP() {
+    positions.slice().forEach((p) => {
+      const q = quote(p.sym);
+      const hitTp = p.tp && (p.side === 'sell' ? q.ask <= p.tp : q.bid >= p.tp);
+      const hitSl = p.sl && (p.side === 'sell' ? q.ask >= p.sl : q.bid <= p.sl);
+      if (hitTp || hitSl) closePos(p.id);
+    });
+  }
+  function checkMargin() {
+    const a = account();
+    if (!isFinite(a.level)) { warned = false; return; }
+    if (a.level < 200 && !warned) { warned = true; pushJournal(t('toast.marginWarn') + ' ' + a.level.toFixed(0) + '%'); flash(t('toast.marginWarn')); }
+    if (a.level > 260) warned = false;
+    if (a.level < 100 && positions.length && !locked) {
+      locked = true; closeAll();
+      pushJournal(t('jrnl.losscut', { r: '100' }));
+      flash(t('toast.losscut'));
+      setTimeout(() => { locked = false; }, 1500);
+    }
+  }
+
+  /* ================= 终端表格 ================= */
+  function renderTrade() {
+    const tb = $('#tradeBody'); tb.innerHTML = '';
+    $('#cTrade').textContent = positions.length;
+    $('#tradeEmpty').style.display = positions.length ? 'none' : 'block';
+    positions.forEach((p) => {
+      const cfg = P[p.sym].cfg, pl = posPl(p);
+      const tr = document.createElement('tr');
+      const kind = p.pending
+        ? (p.type === 'limit' ? (p.side === 'buy' ? t('t.limitBuy') : t('t.limitSell')) : (p.side === 'buy' ? t('t.stopBuy') : t('t.stopSell')))
+        : (p.side === 'buy' ? t('t.buy') : t('t.sell'));
+      tr.innerHTML =
+        '<td>' + p.id + '</td>' +
+        '<td>' + p.time + '</td>' +
+        '<td class="txt">' + p.sym + '</td>' +
+        '<td class="txt">' + kind + '</td>' +
+        '<td>' + p.vol.toFixed(2) + '</td>' +
+        '<td>' + fmt(p.pending ? p.reqPrice : p.price, cfg.dg) + '</td>' +
+        '<td class="cur">' + fmt(mid(p.sym), cfg.dg) + '</td>' +
+        '<td class="pl ' + (pl > 0 ? 'pos' : pl < 0 ? 'neg' : '') + '">' + (p.pending ? '—' : num2(pl)) + '</td>' +
+        '<td>' + (p.pending ? '—' : num2(p.swap)) + '</td>' +
+        '<td><button class="btn" style="height:17px;min-width:44px;padding:0 6px;font-size:10px">' + (p.pending ? (LANG === 'ja' ? '取消' : '撤销') : t('btn.close')) + '</button></td>';
+      tr.querySelector('button').addEventListener('click', (e) => { e.stopPropagation(); closePos(p.id); });
+      tr.addEventListener('dblclick', () => closePos(p.id));
+      tb.appendChild(tr);
+    });
+  }
+  function updateTradeLive() {
+    const rows = $('#tradeBody').children;
+    positions.forEach((p, i) => {
+      const tr = rows[i]; if (!tr) return;
+      if (p.pending) { tr.children[6].textContent = fmt(mid(p.sym), P[p.sym].cfg.dg); return; }
+      const cfg = P[p.sym].cfg, pl = posPl(p);
+      tr.children[6].textContent = fmt(mid(p.sym), cfg.dg);
+      const c = tr.children[7];
+      c.textContent = num2(pl);
+      c.className = 'pl ' + (pl > 0 ? 'pos' : pl < 0 ? 'neg' : '');
+    });
+  }
+  function renderHist() {
+    const tb = $('#histBody'); tb.innerHTML = '';
+    $('#cHist').textContent = history.length;
+    $('#histEmpty').style.display = history.length ? 'none' : 'block';
+    history.slice().reverse().forEach((h) => {
+      const dg = P[h.sym].cfg.dg;
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + h.time + '</td><td class="txt">' + h.sym + '</td>' +
+        '<td class="txt">' + (h.side === 'buy' ? t('t.buy') : t('t.sell')) + '</td>' +
+        '<td>' + h.vol.toFixed(2) + '</td><td>' + fmt(h.price, dg) + '</td><td>' + fmt(h.close, dg) + '</td>' +
+        '<td class="' + (h.pl > 0 ? 'pos' : h.pl < 0 ? 'neg' : '') + '">' + num2(h.pl) + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+  function renderAcct() {
+    const a = account();
+    const rows = [
+      [t('acct.balance'), num2(ACC.balance)],
+      [t('acct.equity'), num2(a.equity)],
+      [t('acct.margin'), num2(a.margin)],
+      [t('acct.free'), num2(a.free)],
+      [t('acct.level'), (isFinite(a.level) ? '<span style="color:' + (a.level < 150 ? '#c0392b' : '#111') + '">' + a.level.toFixed(2) + ' %</span>' : '—')],
+      [t('acct.pl'), num2(a.pl)],
+      [t('acct.credit'), '0.00'],
+      [t('acct.currency'), ACC.currency],
+      [t('acct.lev'), '1:' + ACC.lev],
+      [t('acct.no'), ACC.no || '—'],
+      [t('acct.name'), ACC.brand || '—']
+    ];
+    let html = '';
+    for (let i = 0; i < rows.length; i += 2) {
+      const a1 = rows[i] || ['', ''], a2 = rows[i + 1] || ['', ''];
+      html += '<tr><td class="txt" style="width:118px;color:#444">' + a1[0] + '</td>' +
+        '<td style="width:132px;text-align:right;font-family:var(--num);color:#111">' + a1[1] + '</td>' +
+        '<td class="txt" style="width:24px"></td>' +
+        '<td class="txt" style="width:118px;color:#444">' + a2[0] + '</td>' +
+        '<td style="width:132px;text-align:right;font-family:var(--num);color:#111">' + a2[1] + '</td></tr>';
+    }
+    $('#acctBody').innerHTML = html;
+  }
+  function updateTermFoot() {
+    const a = account();
+    $('#fBalance').textContent = num2(ACC.balance);
+    $('#fEquity').textContent = num2(a.equity);
+    $('#fMargin').textContent = num2(a.margin);
+    $('#fFree').textContent = num2(a.free);
+    const lv = $('#fLevel');
+    lv.textContent = isFinite(a.level) ? a.level.toFixed(2) + '%' : '—';
+    lv.className = !isFinite(a.level) ? '' : a.level < 150 ? 'warn' : a.level < 300 ? '' : 'ok';
+    renderAcct();
+  }
+  function renderJournal() {
+    const box = $('#jrnlBody');
+    $('#cJrnl').textContent = journal.length;
+    box.innerHTML = journal.slice(-80).map((j) =>
+      '<div><span class="t">0 ' + j.t.slice(11) + '</span>' + j.m.replace(/</g, '&lt;') + '</div>').join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  const NEWS = [
+    { tm: '08:50', c: 'JP', ev: { ja: '日銀 政策金利発表', zh: '日本央行 利率决议' }, v: '0.50%' },
+    { tm: '09:30', c: 'AU', ev: { ja: '豪 失業率', zh: '澳大利亚 失业率' }, v: '4.1%' },
+    { tm: '15:00', c: 'EU', ev: { ja: 'ユーロ圏 CPI（前年比）', zh: '欧元区 CPI（年率）' }, v: '2.2%' },
+    { tm: '17:30', c: 'UK', ev: { ja: '英 小売売上高', zh: '英国 零售销售' }, v: '0.3%' },
+    { tm: '21:30', c: 'US', ev: { ja: '米 非農業部門雇用者数', zh: '美国 非农就业' }, v: '—' },
+    { tm: '22:45', c: 'US', ev: { ja: '米 ISM製造業景況指数', zh: '美国 ISM 制造业指数' }, v: '—' }
+  ];
+  function renderNews() {
+    $('#cNews').textContent = NEWS.length;
+    $('#newsBody').innerHTML = NEWS.map((n) =>
+      '<tr><td>' + n.tm + '</td><td class="txt">' + t('news.' + n.c) + '</td><td class="txt">' +
+      (LANG === 'ja' ? n.ev.ja : n.ev.zh) + '</td><td>' + n.v + '</td></tr>').join('');
+  }
+
+  /* ================= 表格外的提示 ================= */
+  function flash(msg) {
+    $('#sbMsg').textContent = msg;
+    clearTimeout(flash._t);
+    flash._t = setTimeout(() => { $('#sbMsg').textContent = ''; }, 2600);
+  }
+
+  /* ================= 菜单 ================= */
+  const MENUS = [
+    {
+      id: 'file', items: [
+        { k: 'mi.newOrder', kb: 'Ctrl+N', act: () => openOrderDlg() },
+        { k: 'mi.closeAll', act: () => { if (positions.length) confirmCloseAll(); } },
+        { k: 'mi.deposit', act: () => openDepositDlg() },
+        { sep: 1 },
+        { k: 'mi.acct', act: () => openAcctDlg() },
+        { k: 'mi.logout', act: () => doLogout() },
+        { k: 'mi.exit', act: () => doLogout() }
+      ]
+    },
+    {
+      id: 'view', items: [
+        { k: 'mi.mw', kb: 'Ctrl+M', act: () => toggleMW(), check: () => S.showMW },
+        { k: 'mi.term', kb: 'Ctrl+T', act: () => toggleTerm(), check: () => S.showTerm },
+        { sep: 1 },
+        { k: 'mi.grid', act: () => { S.showGrid = !S.showGrid; draw(); }, check: () => S.showGrid },
+        { k: 'mi.cross', act: () => { S.showCross = !S.showCross; draw(); }, check: () => S.showCross },
+        { sep: 1 },
+        { k: 'mi.lang', sub: [{ k: 'mi.ja', act: () => setLang('ja'), check: () => LANG === 'ja' }, { k: 'mi.zh', act: () => setLang('zh'), check: () => LANG === 'zh' }] }
+      ]
+    },
+    {
+      id: 'chart', items: [
+        { k: 'mi.ma', act: () => { S.showMA = !S.showMA; draw(); }, check: () => S.showMA },
+        { k: 'mi.posline', act: () => { S.showPosLine = !S.showPosLine; draw(); }, check: () => S.showPosLine },
+        { sep: 1 },
+        { k: 'mi.fullscreen', act: () => $('#app').classList.toggle('maxed') }
+      ]
+    },
+    {
+      id: 'tools', items: [
+        { k: 'mi.newOrder', act: () => openOrderDlg() },
+        { k: 'mi.auto', act: () => toggleAuto(), check: () => S.auto },
+        { k: 'mi.opt', act: null }
+      ]
+    },
+    { id: 'insert', items: [{ k: 'mi.ind', act: null }, { k: 'mi.obj', act: null }] },
+    { id: 'window', items: [{ k: 'mi.tile', act: () => flash('—') }] },
+    { id: 'help', items: [{ k: 'mi.help', act: () => openHelpDlg() }, { k: 'mi.about', act: () => openAboutDlg() }] }
+  ];
+
+  function buildMenus() {
+    const bar = $('#mbar'); bar.innerHTML = '';
+    MENUS.forEach((m) => {
+      const wrap = document.createElement('div'); wrap.className = 'mnu';
+      const btn = document.createElement('button'); btn.textContent = t('menu.' + m.id);
+      wrap.appendChild(btn);
+      const dd = document.createElement('div'); dd.className = 'dropdown';
+      m.items.forEach((it) => {
+        if (it.sep) { const s = document.createElement('div'); s.className = 'msep'; dd.appendChild(s); return; }
+        const el = document.createElement('div'); el.className = 'mi';
+        if (it.kb) el.innerHTML = '<span>' + t(it.k) + '</span><span class="kb">' + it.kb + '</span>';
+        else el.textContent = t(it.k);
+        if (it.check) el.classList.toggle('on', !!it.check());
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (it.sub) return;
+          if (it.act) it.act();
+          closeMenus(); buildMenus();
+        });
+        dd.appendChild(el);
+        if (it.sub) it.sub.forEach((s) => {
+          const se = document.createElement('div'); se.className = 'mi'; se.style.paddingLeft = '34px';
+          se.textContent = t(s.k);
+          se.classList.toggle('on', !!s.check());
+          se.style.setProperty('--x', '1');
+          se.addEventListener('click', (e) => { e.stopPropagation(); s.act(); closeMenus(); buildMenus(); });
+          if (s.check && s.check()) se.style.background = '#e8f2fd';
+          dd.appendChild(se);
+        });
+      });
+      wrap.appendChild(dd);
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation(); const was = wrap.classList.contains('open'); closeMenus();
+        if (!was) wrap.classList.add('open');
+      });
+      wrap.addEventListener('mouseenter', () => { if ($$('.mnu.open').length) { closeMenus(); wrap.classList.add('open'); } });
+      bar.appendChild(wrap);
+    });
+  }
+  const closeMenus = () => $$('.mnu').forEach((m) => m.classList.remove('open'));
+  document.addEventListener('click', closeMenus);
+
+  /* ================= 工具栏时间足 ================= */
+  function buildTF() {
+    const box = $('#tfBox'); box.innerHTML = '';
+    Object.keys(TF).forEach((k) => {
+      const b = document.createElement('button');
+      b.className = 'tfbtn' + (k === S.tf ? ' on' : '');
+      b.textContent = k; b.dataset.tf = k;
+      b.addEventListener('click', () => {
+        S.tf = k; S.rng = null; S.candles = buildCandles();
+        $$('#tfBox .tfbtn').forEach((x) => x.classList.toggle('on', x.dataset.tf === k));
+        updateTitle(); draw();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  /* ================= 开始菜单（Win10 布局 / 直角浅色） ================= */
+  const APPS = [
+    { id: 'mt4',   gi: 'MT', c: '#3d6ea6', ja: 'Kurumi Trader',     zh: 'Kurumi Trader',   sub: 'MT4', gj: 'K',   gz: 'K' },
+    { id: 'news',  gi: 'N',  c: '#b4453f', ja: '経済ニュース',       zh: '财经新闻',        sub: 'Web', gj: 'か行', gz: 'C' },
+    { id: 'rates', gi: '¥',  c: '#2f8f7a', ja: '為替レート',         zh: '汇率行情',        sub: 'MT4', gj: 'た行', gz: 'H' },
+    { id: 'acct',  gi: 'A',  c: '#6c7b8a', ja: '口座情報',           zh: '账户信息',        sub: 'MT4', gj: 'か行', gz: 'Z' },
+    { id: 'chart', gi: 'K',  c: '#7a3f3f', ja: 'ローソク足チャート', zh: 'K线图表',         sub: 'MT4', gj: 'ら行', gz: 'K' },
+    { id: 'calc',  gi: '=',  c: '#7a6ba8', ja: '電卓',               zh: '计算器',          sub: '',    gj: 'た行', gz: 'J' },
+    { id: 'notes', gi: 'M',  c: '#b08a3e', ja: 'メモ帳',             zh: '记事本',          sub: '',    gj: 'ま行', gz: 'J' },
+    { id: 'paint', gi: 'P',  c: '#4a7fb5', ja: 'ペイント',           zh: '画图',            sub: '',    gj: 'は行', gz: 'H' },
+    { id: 'cmd',   gi: '>',  c: '#4a4a4a', ja: 'コマンド プロンプト', zh: '命令提示符',      sub: '',    gj: 'か行', gz: 'M' },
+    { id: 'mail',  gi: '@',  c: '#2f6fa8', ja: 'メール',             zh: '邮件',            sub: '',    gj: 'ま行', gz: 'Y' }
+  ];
+  const TILES = [
+    { id: 'mt4',   c: '#3d6ea6', ja: 'Kurumi', zh: 'Kurumi',  gi: 'MT' },
+    { id: 'news',  c: '#b4453f', ja: '経済ニュース', zh: '财经新闻', gi: 'N' },
+    { id: 'rates', c: '#2f8f7a', ja: '為替', zh: '汇率', gi: '¥' },
+    { id: 'acct',  c: '#6c7b8a', ja: '口座', zh: '账户', gi: 'A' },
+    { id: 'calc',  c: '#7a6ba8', ja: '電卓', zh: '计算器', gi: '=' },
+    { id: 'set',   c: '#8a949e', ja: '設定', zh: '设置', gi: 'S' }
+  ];
+  function renderStart() {
+    const list = $('#smList'); if (!list) return;
+    const nm = (a) => LANG === 'ja' ? a.ja : a.zh;
+    let h = '<div class="sm-head">' + (LANG === 'ja' ? '最近使ったアプリ' : '最近使用') + '</div>';
+    APPS.slice(0, 3).forEach((a) => {
+      h += '<button class="sm-app" data-app="' + a.id + '"><span class="gi" style="background:' + a.c + '">' +
+        a.gi + '</span><span>' + nm(a) + '</span><span class="sub">' + a.sub + '</span></button>';
+    });
+    const sorted = APPS.slice().sort((x, y) => nm(x).localeCompare(nm(y), LANG === 'ja' ? 'ja' : 'zh'));
+    let last = '';
+    sorted.forEach((a) => {
+      const ch = LANG === 'ja' ? a.gj : a.gz;
+      if (ch !== last) { h += '<div class="sm-head">' + ch + '</div>'; last = ch; }
+      h += '<button class="sm-app" data-app="' + a.id + '"><span class="gi" style="background:' + a.c + '">' +
+        a.gi + '</span><span>' + nm(a) + '</span><span class="sub">' + a.sub + '</span></button>';
+    });
+    list.innerHTML = h;
+    const tw = $('#smTiles');
+    tw.innerHTML = TILES.map((x) =>
+      '<button class="tile" data-app="' + x.id + '" style="background:' + x.c + '">' +
+      '<span style="font:700 15px var(--num)">' + x.gi + '</span><span>' + (LANG === 'ja' ? x.ja : x.zh) + '</span></button>').join('');
+    $('#smUser').textContent = LANG === 'ja' ? '福賀くるみ' : '福贺久留美';
+  }
+  function syncChrome() {
+    const set = (sel, ja, zh) => { const el = $(sel); if (el) el.textContent = LANG === 'ja' ? ja : zh; };
+    set('#brwTitle', '経済ニュース - Kurumi Browser', '财经新闻 - Kurumi 浏览器');
+    set('#brwH', '最新ニュース', '最新新闻');
+    set('#brwH2', '主要通貨', '主要货币');
+    set('#brwTab1', '経済ニュース', '财经新闻');
+    set('#brwTab2', '為替', '汇率');
+    set('#npopHead', 'ニュース速報', '新闻快讯');
+    set('#smLang', '日本語', '中文');
+  }
+  function smToggle(on) {
+    const m = $('#startMenu');
+    const next = (typeof on === 'boolean') ? on : !m.classList.contains('on');
+    m.classList.toggle('on', next);
+    $('#startBtn').classList.toggle('on', next);
+  }
+  function smAct(id) {
+    smToggle(false);
+    if (id === 'news') { brwOpen(true); return; }
+    if (id === 'mt4' || id === 'rates') {
+      $('#app').classList.remove('mini'); $('#taskApp').classList.remove('off'); raise($('#app')); setTimeout(resize, 60);
+      if (id === 'rates' && !S.showMW) toggleMW();
+      return;
+    }
+    if (id === 'acct') { $('#app').classList.remove('mini'); raise($('#app')); if (!S.showTerm) toggleTerm(); switchPane('acct'); return; }
+    if (id === 'chart') { $('#app').classList.remove('mini'); raise($('#app')); setTimeout(resize, 60); return; }
+    if (id === 'mail') { brwOpen(true); return; }
+    if (id === 'cmd') { flash(LANG === 'ja' ? 'コマンド プロンプトは準備中です' : '命令提示符尚未提供'); return; }
+    if (id === 'paint') { flash(LANG === 'ja' ? 'ペイントは準備中です' : '画图尚未提供'); return; }
+    if (id === 'calc') { flash(LANG === 'ja' ? '電卓は準備中です' : '计算器尚未提供'); return; }
+    if (id === 'set') { flash(LANG === 'ja' ? '設定は準備中です' : '设置尚未提供'); return; }
+    flash(LANG === 'ja' ? 'メモ帳は準備中です' : '记事本尚未提供');
+  }
+  document.addEventListener('click', (e) => {
+    const t1 = e.target.closest('#startMenu');
+    if (t1 && e.target.closest('[data-app]')) { smAct(e.target.closest('[data-app]').dataset.app); return; }
+    if (!t1 && !e.target.closest('#startBtn')) smToggle(false);
+  });
+
+  /* ================= 経済ニュース（仮想ブラウザ） ================= */
+  const NEWS_ITEMS = [
+    { tag: 'soku', pair: 'USDJPY', dir: -1,
+      ja: { t: '日銀、追加緩和を検討と報道', b: '複数の市場関係者によると、日銀は次回会合で追加緩和の是非を議論する。円売りが優勢になりやすい。' },
+      zh: { t: '央行传讨论追加宽松，日元承压', b: '据多位市场人士消息，日本央行将在下次会议上讨论是否加码宽松，日元卖盘趋于主导。' } },
+    { tag: 'soku', pair: 'USDJPY', dir: 1,
+      ja: { t: '米雇用統計、予想を上回る', b: '非農業部門雇用者数は市場予想を上回った。米長期金利が上昇し、ドル買いが加速している。' },
+      zh: { t: '美国非农数据超预期', b: '非农就业人数高于市场预期，美债收益率上行，美元买盘加速。' } },
+    { tag: 'eco', pair: 'AUDJPY', dir: 1,
+      ja: { t: '豪準備銀行、追加利上げを示唆', b: 'RBA 議長は声明で「インフレ抑制のため追加の引き締めが必要になり得る」と述べた。' },
+      zh: { t: '澳洲联储暗示进一步加息', b: '澳洲联储主席在声明中表示「为抑制通胀，可能需要进一步收紧政策」。' } },
+    { tag: 'eco', pair: 'EURJPY', dir: -1,
+      ja: { t: '欧州中銀、利下げ観測が強まる', b: 'ユーロ圏の消費者物価が鈍化したことで、ECB の早期利下げ観測が強まっている。' },
+      zh: { t: '欧洲央行降息预期升温', b: '欧元区 CPI 增速放缓，市场对欧洲央行提前降息的预期明显升温。' } },
+    { tag: 'soku', pair: 'USDJPY', dir: -1,
+      ja: { t: '日銀総裁「為替の動向を注視」', b: '日銀総裁は会見で急激な為替変動をけん制。市場では円買いが強まった。' },
+      zh: { t: '央行行长称密切关注汇率', b: '日本央行行长在记者会上对剧烈汇率波动作出牵制表态，市场日元买盘增强。' } },
+    { tag: 'eco', pair: 'AUDJPY', dir: 1,
+      ja: { t: '資源価格が急騰、豪ドル買い', b: '鉄鉱石と銅の先物が急伸。資源国通貨の豪ドルに買いが入っている。' },
+      zh: { t: '大宗商品急涨，澳元受捧', b: '铁矿石与铜期货大幅上涨，资源型货币澳元获得买盘。' } },
+    { tag: 'soku', pair: 'EURJPY', dir: 1,
+      ja: { t: '欧州、景況感指数が改善', b: 'ユーロ圏の景況感指数が市場予想を上回り、ユーロ買いが優勢となった。' },
+      zh: { t: '欧元区景气指数改善', b: '欧元区景气指数高于预期，欧元买盘占优。' } },
+    { tag: 'eco', pair: 'USDJPY', dir: 1,
+      ja: { t: '米中協議が難航との報道', b: '協議は難航していると伝わり、リスク回避の円買いが一時的に強まった。' },
+      zh: { t: '美中谈判受阻', b: '有报道称谈判进展不顺，避险日元买盘一度增强。' } }
+  ];
+  let newsSeq = 0, feed = [], newsTimer = 0;
+  function nowHM() {
+    const d = new Date();
+    return (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+  }
+  function tagText(tg) { return tg === 'soku' ? (LANG === 'ja' ? '速報' : '快讯') : (LANG === 'ja' ? '経済' : '财经'); }
+  function renderFeed() {
+    const el = $('#brwList'); if (!el) return;
+    el.innerHTML = feed.map((n, i) => {
+      const o = LANG === 'ja' ? n.ja : n.zh;
+      return '<div class="ni' + (i === 0 && n.fresh ? ' fresh' : '') + '">' +
+        '<div class="ni-h"><span class="ni-time">' + n.time + '</span>' +
+        '<span class="ni-tag' + (n.tag === 'eco' ? ' calm' : '') + '">' + tagText(n.tag) + '</span>' +
+        '<b>' + o.t + '</b></div>' +
+        '<div class="ni-b">' + o.b + '</div>' +
+        '<div class="ni-s">' + (LANG === 'ja' ? '出所: 市場ニュース　影響: ' : '来源：市场新闻　影响：') +
+        n.pair + (n.dir > 0 ? ' ↑' : ' ↓') + '</div></div>';
+    }).join('');
+  }
+  function seedFeed() {
+    feed = [];
+    const base = Date.now();
+    for (let i = 0; i <= 3; i++) {
+      const n = NEWS_ITEMS[i % NEWS_ITEMS.length];
+      const d = new Date(base - (i * 23 + 8) * 60000);
+      feed.push({ time: (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(),
+        tag: n.tag, pair: n.pair, dir: n.dir, ja: n.ja, zh: n.zh, fresh: false });
+    }
+    newsSeq = 4;   // 已展示 4 条，新的从第 5 条开始，避免重复
+    renderFeed();
+  }
+  function publishNews() {
+    const n = NEWS_ITEMS[newsSeq % NEWS_ITEMS.length]; newsSeq++;
+    const item = { time: nowHM(), tag: n.tag, pair: n.pair, dir: n.dir, ja: n.ja, zh: n.zh, fresh: true };
+    feed.unshift(item); if (feed.length > 14) feed.pop();
+    renderFeed();
+    // 行情立刻跳动
+    const st = P[n.pair], cfg = PAIRS.filter((x) => x.code === n.pair)[0];
+    if (st && cfg && st.ticks.length) {
+      const last = st.ticks[st.ticks.length - 1];
+      st.ticks[st.ticks.length - 1] = last + n.dir * cfg.vol * (5 + Math.random() * 4);
+      st.bias = n.dir * cfg.vol * 1.15;
+      if (n.pair === S.sym) flashOC(n.dir < 0);
+    }
+    const el = LANG === 'ja' ? n.ja : n.zh;
+    showNPop(el.t, n.pair + (n.dir > 0 ? (LANG === 'ja' ? ' が急騰' : ' 急涨') : (LANG === 'ja' ? ' が急落' : ' 急跌')));
+    pushJournal((LANG === 'ja' ? 'ニュース: ' : '新闻：') + el.t);
+    renderNews();
+    // 下一次
+    clearTimeout(newsTimer);
+    newsTimer = setTimeout(publishNews, 34000 + Math.random() * 16000);
+  }
+  function showNPop(title, sub) {
+    const p = $('#npop'); if (!p) return;
+    $('#npopT').textContent = title; $('#npopS').textContent = sub;
+    p.classList.add('on');
+    clearTimeout(showNPop._t);
+    showNPop._t = setTimeout(() => p.classList.remove('on'), 9000);
+  }
+  $('#npopX').addEventListener('click', () => { $('#npop').classList.remove('on'); });
+  $('#npop').addEventListener('click', (e) => { if (e.target.id === 'npopX') return; brwOpen(true); $('#npop').classList.remove('on'); });
+
+  function brwOpen(on) {
+    const b = $('#brw'); if (!b) return;
+    if (typeof on === 'boolean') b.classList.toggle('on', on); else b.classList.toggle('on');
+    if (b.classList.contains('on')) { raise(b); renderFeed(); updateBrwTicker(true); }
+  }
+  $('#brwX').addEventListener('click', () => brwOpen(false));
+  $('#brwMin').addEventListener('click', () => brwOpen(false));
+  $('#brwMax').addEventListener('click', () => toggleMax($('#brw')));
+  function updateBrwTicker(force) {
+    const el = $('#brwTick'); if (!el || !$('#brw').classList.contains('on')) return;
+    const now = Date.now();
+    if (!force && updateBrwTicker._t && now - updateBrwTicker._t < 900) return;
+    updateBrwTicker._t = now;
+    el.innerHTML = PAIRS.map((c) => {
+      const st = P[c.code], t2 = st.ticks, last = t2[t2.length - 1], prev = t2[t2.length - 2] || last;
+      const up = last >= prev;
+      return '<span class="it"><b>' + c.code + '</b> ' + last.toFixed(c.dg) +
+        ' <span style="color:' + (up ? '#c0392b' : '#2f6fa8') + '">' + (up ? '▲' : '▼') + '</span></span>';
+    }).join('');
+    const rl = $('#brwRates');
+    if (rl) {
+      rl.innerHTML = PAIRS.slice(0, 5).map((c) => {
+        const st = P[c.code], t2 = st.ticks, last = t2[t2.length - 1], prev = t2[t2.length - 2] || last;
+        return '<div class="rt"><span>' + c.code + '</span><span class="' + (last >= prev ? 'up' : 'dn') + '">' +
+          last.toFixed(c.dg) + '</span></div>';
+      }).join('');
+    }
+    const s = $('#brwStatus');
+    if (s) s.textContent = (LANG === 'ja' ? '読み込み完了' : '已完成加载') + '　' + nowHM();
+  }
+
+  /* ================= 口座を選択 ================= */
+  let acctOn = false, acctPick = 0;
+
+  function acctFiltered() {
+    const q = ($('#acctQ').value || '').trim().toLowerCase();
+    return ACCOUNTS.filter((x) => !q || x.brand.toLowerCase().indexOf(q) >= 0 || x.no.indexOf(q) >= 0);
+  }
+  function renderAcctList() {
+    const list = $('#acctList'), rows = acctFiltered();
+    if (!rows.length) {
+      list.innerHTML = '<div class="ad-empty">' + t('acct.empty') + '</div>';
+      acctPick = -1; return;
+    }
+    if (!acctPick || acctPick === -1 || !rows.some((r) => r.no === acctPick.no)) acctPick = rows[0];
+    list.innerHTML = rows.map((r) =>
+      '<div class="ad-row' + (r.no === acctPick.no ? ' on' : '') + '" data-no="' + r.no + '">' +
+        '<span class="av">FX</span><span class="nm">' + r.brand + '</span>' +
+        '<span class="no">' + r.no + '</span></div>').join('');
+    Array.prototype.forEach.call(list.querySelectorAll('.ad-row'), (row) => {
+      row.addEventListener('click', () => {
+        acctPick = rows.filter((x) => x.no === row.dataset.no)[0];
+        renderAcctList();
+      });
+      row.addEventListener('dblclick', () => { applyAcct(); });
+    });
+  }
+  function openAcctDlg() {
+    acctOn = true;
+    acctPick = ACCOUNTS.filter((x) => x.no === ACC.no)[0] || ACCOUNTS[0];
+    $('#acctQ').value = '';
+    $('#acctQ').placeholder = t('acct.ph');
+    renderAcctList();
+    raiseMask($('#acctMask'));
+    setTimeout(() => { try { $('#acctQ').focus(); } catch (e) {} }, 30);
+  }
+  function closeAcctDlg() { acctOn = false; $('#acctMask').classList.remove('on'); }
+  function applyAcct() {
+    if (!acctPick || acctPick === -1 || !acctPick.no) { closeAcctDlg(); return; }
+    ACC.no = acctPick.no; ACC.brand = acctPick.brand;
+    closeAcctDlg(); updateTitle(); renderAcct();
+    pushJournal(t('acct.ok', { n: ACC.no, b: ACC.brand }));
+    flash(t('acct.ok', { n: ACC.no, b: ACC.brand }));
+  }
+  $('#acctOk').addEventListener('click', applyAcct);
+  $('#acctCancel').addEventListener('click', () => { closeAcctDlg(); pushJournal(t('acct.cancel')); });
+  $('#acctX').addEventListener('click', () => { closeAcctDlg(); pushJournal(t('acct.cancel')); });
+  $('#acctFind').addEventListener('click', renderAcctList);
+  $('#acctQ').addEventListener('input', renderAcctList);
+  $('#acctQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') renderAcctList(); });
+  $('#acctList').addEventListener('keydown', (e) => { if (e.key === 'Enter') applyAcct(); });
+
+  /* ================= 窗口标题 ================= */
+  function updateTitle() {
+    $('#winTitle').textContent = (LANG === 'ja' ? '福賀くるみ' : '福贺久留美') + ' - ' +
+      (ACC.no ? ACC.no + ' - ' : '') + S.sym + ',' + S.tf + ' - Kurumi Trader';
+    document.title = $('#winTitle').textContent;
+  }
+
+  /* ================= 对话框 ================= */
+  function dlg(title, bodyHtml, buttons, width) {
+    const d = $('#dlg');
+    d.style.width = (width || 352) + 'px';
+    d.innerHTML =
+      '<div class="dlg-head"><span>' + title + '</span><button id="dlgX">✕</button></div>' +
+      '<div class="dlg-body">' + bodyHtml + '</div>' +
+      '<div class="dlg-foot"></div>';
+    const f = d.querySelector('.dlg-foot');
+    (buttons || []).forEach((b) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn ' + (b.cls || '');
+      btn.textContent = b.label;
+      btn.addEventListener('click', () => { if (b.fn) b.fn(); closeDlg(); });
+      f.appendChild(btn);
+    });
+    d.querySelector('#dlgX').addEventListener('click', closeDlg);
+    raiseMask($('#mask'));
+  }
+  const closeDlg = () => { $('#mask').classList.remove('on'); };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDlg(); });
+  $('#mask').addEventListener('click', (e) => { if (e.target.id === 'mask') closeDlg(); });
+
+  function symLabel(code) {
+    const c = P[code].cfg;
+    const nm = LANG === 'ja' ? c.ja : c.zh;
+    return code + ', ' + nm.replace('/', t('o.symFmt'));
+  }
+
+  function openOrderDlg() {
+    const opts = PAIRS.map((p) => '<option value="' + p.code + '"' + (p.code === S.sym ? ' selected' : '') + '>' + symLabel(p.code) + '</option>').join('');
+    dlg(t('dlg.new'),
+      '<div class="ogrid">' +
+      '<span>' + t('f.sym') + '</span><select class="symsel" id="dSym">' + opts + '</select>' +
+      '<span>' + t('f.vol') + '</span><div><input id="dVol" class="sinp" style="width:140px;height:22px;border:1px solid #8f8f8f;background:#fff;padding:1px 6px;font:11.5px var(--num);text-align:right" value="' + S.vol.toFixed(2) + '"></div>' +
+      '<span></span><div class="slrow"><span class="lbl">' + t('f.sl') + '</span><input class="sinp" id="dSl" value="0.000">' +
+      '<span class="lbl">' + t('f.tp') + '</span><input class="sinp" id="dTp" value="0.000"></div>' +
+      '<span>' + t('f.type') + '</span><select class="symsel" id="dType">' +
+      '<option value="market">' + t('o.market') + '</option>' +
+      '<option value="limit">' + t('o.limit') + '</option>' +
+      '<option value="stop">' + t('o.stop') + '</option></select>' +
+      '</div>' +
+      '<div class="group"><span class="gtitle" id="gTitle">' + t('o.market') + '</span>' +
+      '<div class="gprice" id="gPrice">—</div>' +
+      '<div class="gbtns"><button class="gbtn sell" id="gSell">' + t('o.sellMkt') + '</button>' +
+      '<button class="gbtn buy" id="gBuy">' + t('o.buyMkt') + '</button></div>' +
+      '<div class="gbar"></div>' +
+      '<div class="gnote" id="gNote"></div></div>',
+      [], 392);
+
+    const symOf = () => $('#dSym').value;
+    const typeOf = () => $('#dType').value;
+
+    function refresh() {
+      const sym = symOf(), cfg = P[sym].cfg, q = quote(sym), ty = typeOf(), mk = ty === 'market';
+      $('#gTitle').textContent = mk ? t('o.market') : ty === 'limit' ? t('o.limit') : t('o.stop');
+      if (mk) {
+        $('#gPrice').innerHTML = fmt(q.bid, cfg.dg) + ' <small>/</small> ' + fmt(q.ask, cfg.dg);
+        $('#gNote').innerHTML = t('o.note1') + '<br>' + t('o.note2');
+      } else {
+        const cur = $('#gLimit') ? $('#gLimit').value : fmt(q.mid, cfg.dg);
+        $('#gPrice').innerHTML = '<input id="gLimit" class="sinp" style="width:158px;height:24px;font-size:15px;text-align:center" value="' + cur + '">';
+        $('#gNote').innerHTML = t('o.noteL1');
+      }
+      $('#gSell').textContent = mk ? t('o.sellMkt') : ty === 'limit' ? t('o.sellLimit') : t('o.sellStop');
+      $('#gBuy').textContent = mk ? t('o.buyMkt') : ty === 'limit' ? t('o.buyLimit') : t('o.buyStop');
+    }
+    $('#dSym').addEventListener('change', refresh);
+    $('#dType').addEventListener('change', refresh);
+    $('#gSell').addEventListener('click', () => submit('sell'));
+    $('#gBuy').addEventListener('click', () => submit('buy'));
+
+    function submit(side) {
+      const sym = symOf(), ty = typeOf();
+      const vol = Math.max(0.01, parseFloat($('#dVol').value) || S.vol);
+      const sl = parseFloat($('#dSl').value) || 0;
+      const tp = parseFloat($('#dTp').value) || 0;
+      let price = 0;
+      if (ty !== 'market') {
+        const el = $('#gLimit');
+        price = parseFloat(el && el.value);
+        if (!price) { flash(LANG === 'ja' ? '価格を入力してください' : '请输入价格'); return; }
+      }
+      if (execute(side, { sym, vol, type: ty, price, sl, tp })) { S.vol = vol; updateOneClick(); closeDlg(); }
+    }
+
+    refresh();
+    const iv = setInterval(() => {
+      if (!$('#mask').classList.contains('on') || !document.body.contains($('#gPrice'))) { clearInterval(iv); return; }
+      if (typeOf() === 'market') {
+        const sym = symOf(), cfg = P[sym].cfg, q = quote(sym);
+        const el = $('#gPrice');
+        if (el) el.innerHTML = fmt(q.bid, cfg.dg) + ' <small>/</small> ' + fmt(q.ask, cfg.dg);
+      }
+    }, 400);
+  }
+
+  function confirmCloseAll() {
+    dlg(t('mi.closeAll'),
+      '<div style="padding:2px 0 8px">' + (LANG === 'ja' ? '全ポジションを成行で決済します。よろしいですか？' : '将以市价平掉全部持仓，确认吗？') + '</div>' +
+      '<div class="dinfo"><div><span>' + t('term.trade') + '</span><b>' + positions.length + '</b></div></div>',
+      [{ label: t('btn.cancel') }, { label: t('btn.close'), cls: 'pri', fn: closeAll }]);
+  }
+  function openDepositDlg() {
+    dlg(t('dlg.deposit'),
+      '<div class="dinfo"><div><span>' + t('acct.balance') + '</span><b>' + num2(ACC.balance) + '</b></div>' +
+      '<div><span>' + t('btn.dep') + '</span><b style="color:#1a7f37">+100,000.00</b></div></div>',
+      [{ label: t('btn.cancel') }, {
+        label: t('btn.dep'), cls: 'pri', fn: () => {
+          ACC.balance += 100000;
+          pushJournal(t('jrnl.deposit', { p: '100,000.00', b: num2(ACC.balance) }));
+          updateTermFoot(); flash(t('toast.deposit'));
+        }
+      }]);
+  }
+  function openAboutDlg() {
+    dlg(t('dlg.about'),
+      '<div style="text-align:center;padding:4px 0 2px">' +
+      '<div style="font:15px Tahoma;color:#123">Kurumi Trader</div>' +
+      '<div style="color:#666;font-size:11px;margin-top:3px">build 4.00 (2026.11) — Demo Account</div>' +
+      '<div style="margin-top:10px;font-size:11px;line-height:1.7;color:#444">' +
+      (LANG === 'ja' ? '「FX戦士くるみちゃん」風の取引画面を再現した<br>非公式のデモ端末です。実際の取引は行いません。'
+        : '复刻《FX战士久留美》交易界面的<br>非官方演示终端，不会进行真实交易。') +
+      '</div></div>',
+      [{ label: t('btn.ok'), cls: 'pri' }], 330);
+  }
+  function openHelpDlg() {
+    const rows = LANG === 'ja'
+      ? [['気配値', '左の一覧をクリックで通貨切替（表示メニューで表示）'],
+      ['一键注文', 'チャート左上の SELL / BUY、または価格をクリック'],
+      ['数量変更', '一键パネルの ▲ ▼ で 1.00 ロットずつ変更'],
+      ['指値注文', 'ツールバー「新規注文」または Ctrl+N'],
+      ['決済', '取引タブの行をダブルクリック、または「決済」ボタン'],
+      ['言語切替', '右上「日本語 ⇄ 中文」ボタン']]
+      : [['报价窗口', '在左侧列表点击切换货币对（视图菜单可显示）'],
+      ['一键下单', '点击图表左上的 SELL / BUY，或点击价格'],
+      ['修改手数', '一键面板的 ▲ ▼ 每次 1.00 手'],
+      ['限价委托', '工具栏「新规订单」或 Ctrl+N'],
+      ['平仓', '双击交易标签中的持仓行，或点「平仓」'],
+      ['语言切换', '右上角「日本語 ⇄ 中文」按钮']];
+    dlg(t('dlg.help'), rows.map((r) => '<div class="dinfo" style="margin-bottom:4px"><div><span>' + r[0] + '</span><b style="font-family:var(--ui);font-weight:400">' + r[1] + '</b></div></div>').join(''),
+      [{ label: t('btn.ok'), cls: 'pri' }], 420);
+  }
+
+  /* ================= 面板开关 ================= */
+  function toggleMW() {
+    S.showMW = !S.showMW;
+    $('#mw').classList.toggle('hide', !S.showMW);
+    setTimeout(resize, 20);
+  }
+  function toggleTerm() {
+    S.showTerm = !S.showTerm;
+    $('#term').classList.toggle('small', !S.showTerm);
+    setTimeout(resize, 20);
+  }
+  function toggleAuto() {
+    S.auto = !S.auto;
+    $('#sbAuto').textContent = S.auto ? 'ON' : 'OFF';
+    $('#btnAuto').classList.toggle('on', S.auto);
+    flash((LANG === 'ja' ? '自動売買 ' : '自动交易 ') + (S.auto ? 'ON' : 'OFF'));
+  }
+
+  /* ================= 语言 ================= */
+  function applyI18n() {
+    $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    const sb = document.getElementById('tbSearch');
+    if (sb) sb.placeholder = LANG === 'ja' ? '検索' : '搜索';
+    renderStart(); renderFeed(); updateBrwTicker(true); syncChrome();
+    $$('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+    $('#langLabel').textContent = LANG === 'ja' ? '中文' : '日本語';
+    $('#langBtn').textContent = LANG === 'ja' ? '日本語 ⇄ 中文' : '中文 ⇄ 日本語';
+    updateTitle();
+  }
+  function setLang(l) {
+    if (LANG === l) return;
+    LANG = l; document.documentElement.lang = l === 'ja' ? 'ja' : 'zh-CN';
+    applyI18n(); buildMenus(); updateTermFoot(); renderTrade(); renderHist(); renderNews(); renderJournal();
+    pushJournal(t('jrnl.lang', { l: l === 'ja' ? '日本語' : '中文' }));
+  }
+  $('#langBtn').addEventListener('click', () => setLang(LANG === 'ja' ? 'zh' : 'ja'));
+  $('#btnLang2').addEventListener('click', () => setLang(LANG === 'ja' ? 'zh' : 'ja'));
+
+  /* ================= 终端标签 ================= */
+  function switchPane(name) {
+    $$('.ttab').forEach((b) => b.classList.toggle('on', b.dataset.pane === name));
+    $$('.pane').forEach((p) => { p.style.display = (p.id === 'pane-' + name) ? '' : 'none'; });
+  }
+  $$('.ttab[data-pane]').forEach((b) => b.addEventListener('click', () => switchPane(b.dataset.pane)));
+  $('#termToggle').addEventListener('click', toggleTerm);
+
+  /* ================= 工具栏动作 ================= */
+  $('#btnNewOrder').addEventListener('click', openOrderDlg);
+  $('#btnBuyArrow').addEventListener('click', () => { S_side('buy'); });
+  $('#btnSellArrow').addEventListener('click', () => { S_side('sell'); });
+  function S_side(side) { execute(side); }
+  $('#btnMW').addEventListener('click', toggleMW);
+  $('#btnAuto').addEventListener('click', toggleAuto);
+  $('#btnCross').addEventListener('click', () => { S.showCross = !S.showCross; $('#btnCross').classList.toggle('on', S.showCross); draw(); });
+  $('#symTab').addEventListener('click', () => { toggleMW(); if (S.showMW) flash(t('mw.title')); });
+
+  /* ================= 窗口 ================= */
+  $('#btnMin').addEventListener('click', () => { $('#app').classList.add('mini'); $('#taskApp').classList.add('off'); flash(t('toast.mini')); });
+  $('#btnMax').addEventListener('click', () => toggleMax($('#app')));
+  $('#btnClose').addEventListener('click', doLogout);
+  function doLogout() {
+    $('#app').classList.add('mini'); $('#taskApp').classList.add('off');
+    flash(LANG === 'ja' ? 'ログアウトしました（タスクバーで復元）' : '已注销（点击任务栏恢复）');
+  }
+  $('#taskApp').addEventListener('click', () => {
+    const a = $('#app');
+    if (a.classList.contains('mini')) { a.classList.remove('mini'); $('#taskApp').classList.remove('off'); raise(a); setTimeout(resize, 60); }
+    else { a.classList.add('mini'); $('#taskApp').classList.add('off'); }
+  });
+  $('#taskApp').classList.remove('off');
+  setTimeout(openAcctDlg, 700);   // 启动时请求选择账户（同参考图）
+
+  /* ================= 窗口管理：拖动 / 最大化 / 置顶 ================= */
+  function makeDrag(win, bar) {
+    let sx = 0, sy = 0, ox = 0, oy = 0, on = false;
+    bar.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button') || win.classList.contains('maxed')) return;
+      const r = win.getBoundingClientRect();
+      on = true; sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
+      win.style.left = ox + 'px'; win.style.top = oy + 'px';
+      win.style.width = r.width + 'px'; win.style.height = r.height + 'px';
+      raise(win);
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!on) return;
+      const w = win.offsetWidth, vw = window.innerWidth, vh = window.innerHeight;
+      win.style.left = clamp(ox + e.clientX - sx, -(w - 100), vw - 100) + 'px';   // 至少留 100px 在屏内
+      win.style.top = clamp(oy + e.clientY - sy, 0, vh - 42 - 12) + 'px';        // 标题栏不许拖到任务栏下面
+    });
+    window.addEventListener('mouseup', () => { on = false; });
+    bar.addEventListener('dblclick', (e) => { if (!e.target.closest('button')) toggleMax(win); });
+  }
+  function toggleMax(win) {
+    if (win.classList.contains('maxed')) {
+      win.classList.remove('maxed');
+      if (win._geo) { win.style.left = win._geo.l; win.style.top = win._geo.t; win.style.width = win._geo.w; win.style.height = win._geo.h; }
+    } else {
+      const r = win.getBoundingClientRect();
+      win._geo = { l: win.style.left || r.left + 'px', t: win.style.top || r.top + 'px',
+                   w: win.style.width || r.width + 'px', h: win.style.height || r.height + 'px' };
+      win.style.left = win.style.top = win.style.width = win.style.height = '';
+      win.classList.add('maxed');
+    }
+    raise(win);
+    setTimeout(resize, 120);
+  }
+  makeDrag($('#app'), $('#tbar'));
+  makeDrag($('#brw'), $('#brwT'));
+  [$('#app'), $('#brw')].forEach((w) => w.addEventListener('mousedown', () => raise(w), true));
+
+  /* ================= 时钟 ================= */
+  function clock() {
+    const d = new Date();
+    const s = d.getFullYear() + '.' + pad(d.getMonth() + 1) + '.' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    $('#sbClock').innerHTML = '<b>' + s + '</b>';
+    const ot = $('#osTime');
+    ot.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    ot.title = d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+    $('#sbLat').textContent = 12 + Math.floor(Math.random() * 14);
+    if (S.showMW) $('#mwTime').textContent = hhmmss();
+  }
+
+  /* ================= 主循环 ================= */
+  function loop() {
+    tickMarket();
+    S.candles = buildCandles();
+    updateMW(); updateOneClick(); updateTradeLive(); updateTermFoot(); checkPending(); checkSLTP(); checkMargin(); draw();
+    updateBrwTicker(false);
+  }
+
+  /* ================= 启动 ================= */
+  function boot() {
+    initMarket();
+    S.candles = buildCandles();
+    applyI18n();
+    buildMenus();
+    buildTF();
+    buildMW();
+    renderTrade(); renderHist(); renderNews();
+    updateTermFoot(); updateOneClick(); updateTitle();
+    pushJournal(t('jrnl.start'));
+    pushJournal(t('jrnl.login'));
+    pushJournal(t('toast.demo'));
+    renderJournal();
+    resize();
+    window.KX = { S: S, P: P, pos: () => positions, acc: account, news: () => feed, publish: () => publishNews() };
+    $('#startBtn').addEventListener('click', (e) => { e.stopPropagation(); smToggle(); });
+    const smc = $('#smClose'); if (smc) smc.addEventListener('click', () => smToggle(false));
+    syncChrome();
+    seedFeed();
+    setTimeout(() => brwOpen(true), 3200);          // 自动打开财经新闻浏览器
+    setTimeout(() => publishNews(), 15000);         // 第一条新闻
+    setInterval(loop, 700);
+    setInterval(clock, 1000);
+    clock();
+  }
+  boot();
+})();
+
+</script>
+</body>
+</html>
